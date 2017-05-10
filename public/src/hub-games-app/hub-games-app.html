@@ -1,0 +1,146 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../../bower_components/app-route/app-route.html">
+<link rel="import" href="../../bower_components/app-route/app-location.html">
+
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+
+
+
+
+
+<dom-module id="hub-games-app">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+      }
+      .container {
+        margin: 10px;
+        height: 55px;
+      }
+      .content {
+        padding: 16px;
+        padding-left: 4px;
+        padding-right: 4px;
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .vcenter {
+        margin-top: auto;
+        margin-bottom: auto;
+      }
+    </style>
+
+    <app-location route="{{route}}" use-hash-as-path></app-location>
+    <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{tail}}"></app-route>
+      <!--<paper-header-panel>-->
+        <paper-toolbar>
+          <div style="width: 100%;" class="layout horizontal">
+            <div class="vcenter">iPoly Hub Games</div>
+            <div class="flex"></div>
+            
+            <paper-button>Leaderboard</paper-button>
+            <paper-button>Games</paper-button>
+          </div>
+          
+        </paper-toolbar>
+        <div class="container">
+          <div class="content">
+            
+            
+          </div>
+        </div>
+      <!--</paper-header-panel>-->
+    <paper-toast id="globalToast"></paper-toast>
+  </template>
+  <script>
+    Polymer({
+
+      is: 'hub-games-app',
+
+      properties: {
+        page: {
+          type: String,
+          value: 'leaderboard',
+          observer: '_onPageChanged'
+        },
+        routeData: {
+          type: Object
+        },
+        tail: {
+          type: Object
+        }
+      },
+      observers: [
+      ],
+      listeners: {
+        'goto-page': '_handleGotoPage',
+        'firetoast': '_handleToast',
+        'show-back-button': '_handleShowBackButton'
+      },
+      _log: function(e) {
+        console.log(e);
+      },
+      ready: function(e) {
+        console.log("path: " + this.routeData.page);
+        console.log(this.routeData);
+        if(this.routeData) {
+          if(this.routeData.page == undefined || this.routeData.page == '') {
+            window.location.href = '#/leaderboard';
+          }
+        }
+      },
+      _handleSetTitle: function(e) {
+        if(e && e.detail && e.detail.title) {
+          this.titleText = e.detail.title;          
+        } else {
+          this.titleText = '';
+        }
+      },
+      _handleGotoPage: function(e) {
+        console.log(e);
+        if(e && e.detail && e.detail.page) {
+          this.page = e.detail.page;
+        }
+        console.log(this.page);
+      },
+      _onPageChanged: function(e) {
+        console.log('changed: ' + e);
+        this.set('route.path', '/' + e);
+      },
+      _handleToast: function(e) {
+        if(e && e.detail) {
+          this.$.globalToast.text = e.detail.message;
+          this.$.globalToast.show();
+        }
+      },
+      _handleShowBackButton: function(e) {
+        var temp = true;
+        if(e.detail !== undefined)
+          temp = e.detail;
+
+        this.$.backButton.hidden = !temp;
+        this.$.menuButton.hidden = temp;
+      },
+      _goBack: function(e) {
+        this.$.backButton.hidden = true;
+        this.$.menuButton.hidden = false;
+        window.history.back();
+      }
+    });
+  </script>
+</dom-module>

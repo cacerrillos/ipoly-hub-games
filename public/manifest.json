@@ -1,0 +1,6 @@
+{
+  "name": "hub-games",
+  "short_name": "hub-games",
+  "start_url": "/",
+  "display": "standalone"
+}
