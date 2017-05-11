@@ -1,0 +1,228 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/app-route/app-route.html">
+
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+
+<dom-module id="games-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+      }
+      .container {
+        margin: 10px;
+      }
+      .content {
+        padding: 16px;
+        padding-left: 4px;
+        padding-right: 4px;
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .center {
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        text-align: center;
+      }
+      .vcenter {
+        margin-top: auto;
+        margin-bottom: auto;
+      }
+      .row {
+        height: 2em;
+      }
+      .row > h4 {
+        padding-right: 8px;
+      }
+      h1, h2, h3, h4 {
+        margin: 0;
+      }
+      paper-material {
+        background-color: white;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+      .rightalign {
+        text-align: right;
+        padding-right: 4px;
+      }
+    </style>
+    <app-route route="{{route}}" pattern="/games/:id" data="{{routeData}}" active="{{editActive}}"></app-route>
+
+    <template is="dom-if" if="[[!editActive]]">
+      <paper-material elevation="1">
+        <!-- <paper-spinner active></paper-spinner> -->
+        <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
+          <h3>Host</h3>
+          <div class="flex"></div>
+          <h3>Game</h3>
+          <div class="flex"></div>
+          <h3>Location</h3>
+        </div>
+        <template is="dom-repeat" items="[[gamesArray]]" as="game">
+          <div class="layout horizontal row">
+            <div class="layout vertical">
+              <div class="flex"></div>
+              <paper-icon-button icon="icons:assignment" on-tap="_edit"></paper-icon-button>
+              <div class="flex"></div>
+            </div>
+            
+            <h4 class="vcenter">[[game.host]]</h4>
+            <div class="flex"></div>
+            <h4 class="vcenter">[[game.title]]</h4>
+            <div class="flex"></div>
+            <h4 class="vcenter">[[game.location]]</h4>
+          </div>
+          
+        </template>
+      </paper-material>
+    </template>
+    <template is="dom-if" if="[[editActive]]">
+      <paper-material elevation="1">
+        <h2>[[_getAttrFromObj(routeData.id, 'host', games)]] - [[_getAttrFromObj(routeData.id, 'title', games)]]</h2>
+        <!-- <paper-spinner active></paper-spinner> -->
+        <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
+          <h3>Rank</h3>
+          <div class="flex"></div>
+          <h3>Team</h3>
+          <div class="flex"></div>
+          <h3>Score</h3>
+        </div>
+        <template is="dom-repeat" items="[[scoreDetails]]" as="result">
+          <div class="layout horizontal row">
+            <h4 class="vcenter">[[result.rank]]</h4>
+            <div class="flex"></div>
+
+            <div class="layout vertical">
+              <div class="flex"></div>
+              <paper-icon-button icon="icons:assignment" on-tap="_goTeam"></paper-icon-button>
+              <div class="flex"></div>
+            </div>
+            <h4 class="vcenter">[[_getAttrFromObj(result.p_id, 'name', participants)]]</h4>
+            <div class="flex"></div>
+
+            <h4 class="vcenter">[[_parseScore(result.score_type, result.value)]]</h4>
+          </div>
+        </template>
+      </paper-material>
+    </template>
+    
+  </template>
+  <script>
+    Polymer({
+      is: 'games-page',
+      properties: {
+        route: {
+          type: Object,
+          notify: true
+        },
+        games: {
+          type: Object
+        },
+        gamesArray: {
+          type: Array
+        },
+        editActive: {
+          type: Boolean
+        },
+        routeData: {
+          type: Object
+        },
+        scoreDetails: {
+          type: Array,
+          computed: '_getScores(games, scores, routeData.id)'
+        },
+        participants: {
+          type: Object
+        }
+      },
+      _edit: function(e) {
+        console.log(this.route);
+        var id = e.model.get('game.id');
+        if(id !== undefined)
+          this.set('route.path', '/games/' + id);
+        //console.log(e.model.get('game.id'));
+      },
+      _objToArr: function(obj) {
+        if(obj)
+          return Object.keys(obj).map(function (key) { return obj[key]; });
+        return [];
+      },
+      _getAttrFromObj: function(key, attr, obj) {
+        if(obj && key && obj[key] && obj[key][attr]) {
+          return obj[key][attr];
+        }
+        return "error";
+      },
+      _getScores: function(games, e, id) {
+        console.log(games);
+        console.log(e);
+        console.log(id);
+        var s = [];
+        if(games && e && id != undefined && e[id] && games[id]) {
+          console.log(e[id]);
+          console.log(games[id]);
+          s = this._objToArr(e[id]);
+          console.log(s);
+          var g = games[id];
+          if(g.score_type == 1 || g.score_type == 2) { //absolute or timed scoring
+            s.sort(function(a, b) {
+              if(a.value == b.value)
+                return 0;
+              return a.value < b.value ? g.direction : g.direction * -1;
+            });
+          }
+          console.log(s);
+        }
+        if(s.length > 0) {
+          s[0].rank = 1;
+          s[0].score_type = games[id].score_type;
+        }
+
+        for(var x = 1; x < s.length; x++) {
+          s[x].rank = s[x - 1].rank + (s[x - 1].value != s[x].value ? 1 : 0);
+          s[x].score_type = games[id].score_type;
+        }
+        console.log(s);
+        return s;
+      },
+      _parseScore: function(score_type, score) {
+        if(score_type == 1) {
+          return score;
+        } else if(score_type == 2) {
+          return score + ' parse time';
+        }
+        return score;
+      },
+      _goTeam: function(e) {
+        var id = e.model.get('result.p_id');
+        if(id !== undefined) {
+          this.set('route.path', '/teams/' + id);
+        }
+      }
+    });
+  </script>
+</dom-module>

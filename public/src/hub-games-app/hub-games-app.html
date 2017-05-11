@@ -17,6 +17,8 @@
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 
+<link rel="import" href="games-page.html">
+
 
 
 
@@ -76,23 +78,28 @@
     <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{tail}}"></app-route>
 
     <iron-ajax
-       auto
-       url="[[_computeAPI('/participants')]]"
-       handle-as="json"
-       on-response="handleResponse"
-       last-response="{{participants}}"></iron-ajax>
-       <iron-ajax
-       auto
-       url="[[_computeAPI('/games')]]"
-       handle-as="json"
-       on-response="handleResponse"
-       last-response="{{games}}"></iron-ajax>
-              <iron-ajax
-       auto
-       url="[[_computeAPI('/schedule')]]"
-       handle-as="json"
-       on-response="handleResponse"
-       last-response="{{schedule}}"></iron-ajax>
+      auto
+      url="[[_computeAPI('/participants')]]"
+      handle-as="json"
+      on-response="handleResponse"
+      last-response="{{participants}}"></iron-ajax>
+    <iron-ajax
+      auto
+      url="[[_computeAPI('/games')]]"
+      handle-as="json"
+      on-response="handleResponse"
+      last-response="{{games}}"></iron-ajax>
+    <iron-ajax
+      auto
+      url="[[_computeAPI('/schedule')]]"
+      handle-as="json"
+      on-response="handleResponse"
+      last-response="{{schedule}}"></iron-ajax>
+    <iron-ajax
+      auto
+      url="[[_computeAPI('/scores')]]"
+      handle-as="json"
+      last-response="{{scores}}"></iron-ajax>
 
 
       <!--<paper-header-panel>-->
@@ -164,28 +171,14 @@
                   </template>
                 </iron-pages>
               </section>
-              <section name="games">
-                <paper-material elevation="1">
-                  <!-- <paper-spinner active></paper-spinner> -->
-                  <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
-                    <h3>Host</h3>
-                    <div class="flex"></div>
-                    <h3>Game</h3>
-                    <div class="flex"></div>
-                    <h3>Location</h3>
-                  </div>
-                  <template is="dom-repeat" items="[[gamesArray]]" as="game">
-                    <div class="layout horizontal row">
-                      <h4>[[game.host]]</h4>
-                      <div class="flex"></div>
-                      <h4>[[game.title]]</h4>
-                      <div class="flex"></div>
-                      <h4>[[game.location]]</h4>
-                    </div>
-                    
-                  </template>
-                </paper-material>
-              </section>
+              <games-page
+                name="games"
+                games="[[games]]"
+                games-array="[[gamesArray]]"
+                scores="[[scores]]"
+                participants="[[participants]]"
+                route="{{route}}"
+                ></games-page>
             </iron-pages>
             
             
@@ -255,6 +248,9 @@
           computed: '_computeLeaderboard(totals)'
         },
         scores: {
+          type: Object
+        },
+        scoresArray: {
           type: Array,
           value: [
 
@@ -262,7 +258,7 @@
         },
         totals: {
           type: Object,
-          computed: '_computeTotals(participants, scores)'
+          computed: '_computeTotals(participants, scoresArray)'
         }
       },
       observers: [
@@ -291,6 +287,12 @@
         if(obj)
           return Object.keys(obj).map(function (key) { return obj[key]; });
         return [];
+      },
+      _getAttrFromObj: function(key, attr, obj) {
+        if(obj && key && obj[key] && obj[key][attr]) {
+          return obj[key][attr];
+        }
+        return "error";
       },
       _blocks: function(e) {
         if(e)
@@ -374,12 +376,6 @@
 
         return a;
       },
-      _getAttrFromObj: function(key, attr, obj) {
-        if(obj && key && obj[key] && obj[key][attr]) {
-          return obj[key][attr];
-        }
-        return "error";
-      },
       _handleSetTitle: function(e) {
         if(e && e.detail && e.detail.title) {
           this.titleText = e.detail.title;          
@@ -404,7 +400,7 @@
           }
         }
         if(page)
-          this.set('routeData.page', page);
+          this.set('route.path', '/' + page);
       },
       _onPageChanged: function(e) {
         console.log('changed: ' + e);
