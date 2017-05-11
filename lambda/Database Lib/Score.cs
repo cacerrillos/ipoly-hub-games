@@ -4,16 +4,20 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
-namespace ProjectStableLibrary {
-	[Table("locations")]
-	public class Location {
+namespace DatabaseLib {
+	[Table("scores")]
+	public class Score {
 		[Key]
-		public uint location_id {
+		public uint g_id {
 			get;
 			set;
 		}
-		[MaxLength(255)]
-		public string location_name {
+		[Key]
+		public uint p_id {
+			get;
+			set;
+		}
+		public uint value {
 			get;
 			set;
 		}

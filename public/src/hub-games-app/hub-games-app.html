@@ -12,6 +12,10 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 
 
 
@@ -25,7 +29,6 @@
       }
       .container {
         margin: 10px;
-        height: 55px;
       }
       .content {
         padding: 16px;
@@ -38,32 +41,162 @@
       .center {
         margin-left: auto;
         margin-right: auto;
+        width: 100%;
+        text-align: center;
       }
       .vcenter {
         margin-top: auto;
         margin-bottom: auto;
       }
+      .row {
+        height: 2em;
+      }
+      .row > h4 {
+        padding-right: 8px;
+      }
+      h3, h4 {
+        margin: 0;
+      }
+      paper-material {
+        background-color: white;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+      .rightalign {
+        text-align: right;
+        padding-right: 4px;
+      }
     </style>
 
     <app-location route="{{route}}" use-hash-as-path></app-location>
     <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{tail}}"></app-route>
+
+    <iron-ajax
+       auto
+       url="[[_computeAPI('/participants')]]"
+       handle-as="json"
+       on-response="handleResponse"
+       last-response="{{participants}}"></iron-ajax>
+       <iron-ajax
+       auto
+       url="[[_computeAPI('/games')]]"
+       handle-as="json"
+       on-response="handleResponse"
+       last-response="{{games}}"></iron-ajax>
+              <iron-ajax
+       auto
+       url="[[_computeAPI('/schedule')]]"
+       handle-as="json"
+       on-response="handleResponse"
+       last-response="{{schedule}}"></iron-ajax>
+
+
       <!--<paper-header-panel>-->
         <paper-toolbar>
           <div style="width: 100%;" class="layout horizontal">
             <div class="vcenter">iPoly Hub Games</div>
             <div class="flex"></div>
             
-            <paper-button>Leaderboard</paper-button>
-            <paper-button>Games</paper-button>
+            <paper-button on-tap="_handleGotoPage" data-page="leaderboard">Leaderboard</paper-button>
+            <paper-button on-tap="_handleGotoPage" data-page="schedule">Schedule</paper-button>
+            <paper-button on-tap="_handleGotoPage" data-page="games">Games</paper-button>
           </div>
           
         </paper-toolbar>
         <div class="container">
           <div class="content">
+            <iron-pages selected="[[routeData.page]]" attr-for-selected="name">
+              <section name="leaderboard">
+                <paper-material elevation="1">
+                  <h3 class="center">Leaderboard</h3>
+
+                  <!-- <paper-spinner active></paper-spinner> -->
+                  <table>
+                    <tr>
+                      <td><h3>Rank</h3></td>
+                      <td><h3>Team</h3></td>
+                      <td><h3>Score</h3></td>
+                    </tr>
+                    <template is="dom-repeat" items="[[leaderboard]]" as="team">
+                      <tr>
+                        <td class="rightalign"><h4>[[team.rank]]</h4></td>
+                        <td><h4>[[team.team]]</h4></td>
+                        <td><h4>[[team.score]]</h4></td>
+                      </tr>
+                      
+                    </template>
+                  </table>
+                </paper-material>
+              </section>
+              <section name="schedule">
+                <div class="layout horizontal">
+                  <paper-icon-button icon="icons:arrow-back" on-tap="_back"></paper-icon-button>
+                  <div class="flex"></div>
+                  <paper-icon-button icon="icons:arrow-forward" on-tap="_forward"></paper-icon-button>
+                </div>
+                <iron-pages selected="[[currentBlock]]" attr-for-selected="data-block">
+                  <template is="dom-repeat" items="[[blocks]]" as="block">
+                    <paper-material elevation="1" data-block$="[[block]]">
+                      <h3>Block [[block]]</h3>
+                      <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
+                        <h3>Team</h3>
+                        <div class="flex"></div>
+                        <h3>Game</h3>
+                        <div class="flex"></div>
+                        <h3>Location</h3>
+                      </div>
+                      <template is="dom-repeat" items="[[_filterSchedule(schedule, block)]]" as="schedule">
+                        <div class="layout horizontal row">
+                          <h4>[[_getAttrFromObj(schedule.p_id, 'name', participants)]]</h4>
+                          <div class="flex"></div>
+                          <h4>[[_getAttrFromObj(schedule.g_id, 'title', games)]]</h4>
+                          <div class="flex"></div>
+                          <h4>[[_getAttrFromObj(schedule.g_id, 'location', games)]]</h4>
+
+                        </div>
+
+                      </template>
+                    </paper-material>
+                  </template>
+                </iron-pages>
+              </section>
+              <section name="games">
+                <paper-material elevation="1">
+                  <!-- <paper-spinner active></paper-spinner> -->
+                  <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
+                    <h3>Host</h3>
+                    <div class="flex"></div>
+                    <h3>Game</h3>
+                    <div class="flex"></div>
+                    <h3>Location</h3>
+                  </div>
+                  <template is="dom-repeat" items="[[gamesArray]]" as="game">
+                    <div class="layout horizontal row">
+                      <h4>[[game.host]]</h4>
+                      <div class="flex"></div>
+                      <h4>[[game.title]]</h4>
+                      <div class="flex"></div>
+                      <h4>[[game.location]]</h4>
+                    </div>
+                    
+                  </template>
+                </paper-material>
+              </section>
+            </iron-pages>
+            
+            
             
             
           </div>
         </div>
+        <!-- wegb
+        <paper-material elevation="1">
+          saasdasd
+        </paper-material> -->
       <!--</paper-header-panel>-->
     <paper-toast id="globalToast"></paper-toast>
   </template>
@@ -75,7 +208,6 @@
       properties: {
         page: {
           type: String,
-          value: 'leaderboard',
           observer: '_onPageChanged'
         },
         routeData: {
@@ -83,6 +215,54 @@
         },
         tail: {
           type: Object
+        },
+        games: {
+          type: Object
+        },
+        gamesArray: {
+          type: Array,
+          computed: '_objToArr(games)'
+        },
+        participants: {
+          type: Object
+        },
+        participantsArray: {
+          type: Array,
+          computed: '_objToArr(participants)'
+        },
+        schedule: {
+          type: Object
+        },
+        scheduleArray: {
+          type: Array,
+          computed: '_scheduleArray(schedule)'
+        },
+        blocks: {
+          type: Array,
+          computed: '_blocks(schedule)'
+        },
+        currentBlockIndex: {
+          type: Number,
+          value: 0
+        },
+        /* todo auto change block based on time */
+        currentBlock: {
+          type: String,
+          computed: '_currentBlock(blocks, currentBlockIndex)'
+        },
+        leaderboard: {
+          type: Array,
+          computed: '_computeLeaderboard(totals)'
+        },
+        scores: {
+          type: Array,
+          value: [
+
+          ]
+        },
+        totals: {
+          type: Object,
+          computed: '_computeTotals(participants, scores)'
         }
       },
       observers: [
@@ -92,17 +272,113 @@
         'firetoast': '_handleToast',
         'show-back-button': '_handleShowBackButton'
       },
+      _computeAPI: function (path) {
+        switch(path) {
+          case '/games':
+            return this.resolveUrl('../../games.json');
+          case '/schedule':
+            return this.resolveUrl('../../schedule.json');
+          case '/participants':
+            return this.resolveUrl('../../participants.json');
+        }
+        var apiRootPath = 'https://zerx6mo164.execute-api.us-east-2.amazonaws.com/v1';
+        return apiRootPath + path;
+      },
       _log: function(e) {
         console.log(e);
       },
+      _objToArr: function(obj) {
+        if(obj)
+          return Object.keys(obj).map(function (key) { return obj[key]; });
+        return [];
+      },
+      _blocks: function(e) {
+        if(e)
+          return Object.keys(e);
+        return [];
+      },
+      _back: function(e) {
+        //if()
+        if(this.currentBlockIndex > 0)
+          this.currentBlockIndex--;
+      },
+      _forward: function(e) {
+        if(this.currentBlockIndex < this.blocks.length - 1)
+          this.currentBlockIndex++;
+      },
+      _currentBlock: function(e, index) {
+        if(e && index !== undefined && e[index]) {
+          return e[index];
+        }
+        return '';
+      },
+      _scheduleArray: function(obj) {
+        console.log(obj);
+      },
+      _filterSchedule: function(schedule, block) {
+        if(schedule && block && schedule[block]) {
+          return schedule[block];
+        }
+        return [];
+      },
       ready: function(e) {
-        console.log("path: " + this.routeData.page);
-        console.log(this.routeData);
         if(this.routeData) {
           if(this.routeData.page == undefined || this.routeData.page == '') {
             window.location.href = '#/leaderboard';
           }
         }
+      },
+      _computeLeaderboard: function(p) {
+        var p_a = this._objToArr(p);
+        // p_a[6].total = 50;
+        // p_a[7].total = 44;
+        // p_a[8].total = 44;
+
+        
+        p_a.sort(function(a, b) {
+          if(a.total == b.total)
+            return 0;
+          return a.total > b.total ? -1 : 1;
+        });
+
+        var arr = [];
+        var rank = 0;
+        if(p) {
+          for(var k in p_a) {
+            if(!p_a.hasOwnProperty(k)) continue;
+
+            if(arr.length == 0 || arr[arr.length - 1].score != p_a[k].total)
+              rank++;
+
+            arr.push({
+              'rank': rank,
+              'team': this._getAttrFromObj(p_a[k].id, 'name', this.participants),
+              'id': p_a[k].id,
+              'score': p_a[k].total
+            });
+
+          }
+        }
+        return arr;
+      },
+      _computeTotals: function(p, s) {
+        var a = {};
+        for(var k in p) {
+          if(!p.hasOwnProperty(k)) continue;
+
+          a[p[k].id] = {
+            'id': p[k].id,
+            'total': 0
+          };
+        }
+
+        return a;
+      },
+      _getAttrFromObj: function(key, attr, obj) {
+        if(obj && key && obj[key] && obj[key][attr]) {
+          return obj[key][attr];
+        }
+        return "error";
       },
       _handleSetTitle: function(e) {
         if(e && e.detail && e.detail.title) {
@@ -112,11 +388,23 @@
         }
       },
       _handleGotoPage: function(e) {
-        console.log(e);
-        if(e && e.detail && e.detail.page) {
-          this.page = e.detail.page;
+        var page = undefined;
+        if(e) {
+          if(typeof e === 'string' || e instanceof String) {
+            page = e;
+
+          } else if(e instanceof Event) {
+            if(e.type == 'tap') {
+              if(e.target.getAttribute('data-page')) {
+                page = e.target.getAttribute('data-page');
+              }
+            } else if(e.detail && e.detail.page) {
+              page = e.detail.page;
+            }
+          }
         }
-        console.log(this.page);
+        if(page)
+          this.set('routeData.page', page);
       },
       _onPageChanged: function(e) {
         console.log('changed: ' + e);

@@ -1,0 +1,28 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/hub-games-app/hub-games-app.html",
+  "fragments": [
+  ],
+  "sources": [
+    "src/**/*",
+    "images/**/*",
+    "bower.json"
+  ],
+  "extraDependencies": [
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js",
+    "games.json",
+    "participants.json",
+    "schedule.json",
+    "manifest.json"
+  ],
+  "includeDependencies": [
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js",
+    "games.json",
+    "participants.json",
+    "schedule.json",
+    "manifest.json"
+  ],
+  "lint": {
+    "rules": ["polymer-1"]
+  }
+}

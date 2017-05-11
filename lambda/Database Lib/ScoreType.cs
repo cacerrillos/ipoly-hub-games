@@ -4,16 +4,18 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
-namespace ProjectStableLibrary {
-	[Table("dates")]
-	public class Date {
+namespace DatabaseLib {
+	[Table("score_type")]
+	public class ScoreType {
 		[Key]
-		public uint date {
+		public uint id {
 			get;
 			set;
 		}
-		public override string ToString() {
-			return $"date: {date}";
+		[MaxLength(255)]
+		public string text {
+			get;
+			set;
 		}
 	}
 }

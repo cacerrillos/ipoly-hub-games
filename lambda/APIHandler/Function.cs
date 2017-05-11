@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization;
 using Amazon.Lambda.APIGatewayEvents;
-using ProjectStableLibrary;
+using DatabaseLib;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System.Net;
@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializerAttribute(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace StableAPIHandler {
+namespace APIHandler {
 	public class Function {
 
 		/// <summary>
@@ -40,13 +40,11 @@ namespace StableAPIHandler {
 			bool enabled = bool.Parse(Environment.GetEnvironmentVariable("enabled"));
 
 			bool freeforall = false;
-			try {
-				freeforall = bool.Parse(Environment.GetEnvironmentVariable("freeforall"));
-			} catch(Exception e) {
-				Logger.LogLine("Warning! " + e.Message);
+		
+
+			if(apigProxyEvent.Path.Contains("/api") && apigProxyEvent.Path.Length > 4) {
+				apigProxyEvent.Path = apigProxyEvent.Path.Substring(4, apigProxyEvent.Path.Length - 4);
 			}
-
-
 
 			//Pre check the request path to save time
 
@@ -68,41 +66,20 @@ namespace StableAPIHandler {
 						StatusCode = HttpStatusCode.NotFound
 					};
 
-				case "/dates":
-				case "/dates/":
-				case "/blocks":
-				case "/blocks/":
-				case "/grades":
-				case "/grades/":
-				case "/houses":
-				case "/houses/":
-				case "/locations":
-				case "/locations/":
-				case "/presentations":
-				case "/presentations/":
-				case "/viewers":
-				case "/viewers/":
+				case "/games":
+				case "/games/":
+				case "/participants":
+				case "/participants/":
 				case "/schedule":
 				case "/schedule/":
+				case "/scores":
+				case "/scores/":
+				case "/score_type":
+				case "/score_type/":
 				case "/print":
 				case "/print/":
-				case "/full":
-				case "/full/":
 					break;
 
-				case "/signup":
-				case "/signup/":
-				case "/register":
-				case "/register/":
-					break;
-
-				case "/signup/finish":
-				case "/signup/finish/":
-					break;
-
-				case "/preferences":
-				case "/preferences/":
-					break;
 
 				default:
 					return new StableAPIResponse {
@@ -134,157 +111,44 @@ namespace StableAPIHandler {
 								resultCode = 200;
 								break;
 
-							case "/dates":
-							case "/dates/":
+							case "/games":
+							case "/games/":
 								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Dates),
+									Body = JsonConvert.SerializeObject(ctx.Games),
 									StatusCode = HttpStatusCode.OK
 								};
 								break;
-
-							case "/blocks":
-							case "/blocks/":
+							case "/participants":
+							case "/participants/":
 								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Blocks),
+									Body = JsonConvert.SerializeObject(ctx.Participants),
 									StatusCode = HttpStatusCode.OK
 								};
 								break;
-
-							case "/grades":
-							case "/grades/":
-								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Grades),
-									StatusCode = HttpStatusCode.OK
-								};
-								break;
-
-							case "/houses":
-							case "/houses/":
-								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Houses),
-									StatusCode = HttpStatusCode.OK
-								};
-								break;
-
-							case "/locations":
-							case "/locations/":
-								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Locations),
-									StatusCode = HttpStatusCode.OK
-								};
-								break;
-
-							case "/presentations":
-							case "/presentations/":
-								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Presentations),
-									StatusCode = HttpStatusCode.OK
-								};
-								break;
-
-							case "/viewers":
-							case "/viewers/":
-								if(apigProxyEvent.QueryStringParameters != null) {
-									if(apigProxyEvent.QueryStringParameters.Count(thus => thus.Key == "date" || thus.Key == "block_id" || thus.Key == "presentation_id") == 3) {
-										try {
-											uint date = uint.Parse(apigProxyEvent.QueryStringParameters["date"]);
-											uint block_id = uint.Parse(apigProxyEvent.QueryStringParameters["block_id"]);
-											uint presentation_id = uint.Parse(apigProxyEvent.QueryStringParameters["presentation_id"]);
-
-											var regs = ctx.registrations.Where(thus => thus.date == date && thus.block_id == block_id && thus.presentation_id == presentation_id).ToList();
-											var viewers = ctx.viewers.ToList();
-											var result = new List<SanitizedViewer>();
-											foreach(var r in regs) {
-												result.Add(viewers.Find(thus => thus.viewer_id == r.viewer_id).Sanitize());
-											}
-											response = new StableAPIResponse() {
-												Body = JsonConvert.SerializeObject(result),
-												StatusCode = HttpStatusCode.OK
-											};
-										} catch(Exception e) {
-											Logger.LogLine(e.ToString());
-											response = new StableAPIResponse() {
-												Body = JsonConvert.SerializeObject(new Result(e)),
-												StatusCode = HttpStatusCode.BadRequest
-											};
-										}
-										break;
-									} else if(apigProxyEvent.QueryStringParameters.ContainsKey("viewer_id")) {
-										try {
-											uint viewer_id = uint.Parse(apigProxyEvent.QueryStringParameters["viewer_id"]);
-											response = new StableAPIResponse() {
-												Body = JsonConvert.SerializeObject(ctx.viewers.First(thus => thus.viewer_id == viewer_id)),
-												StatusCode = HttpStatusCode.OK
-											};
-										} catch(Exception e) {
-											Logger.LogLine(e.ToString());
-											response = new StableAPIResponse() {
-												Body = JsonConvert.SerializeObject(new Result(e)),
-												StatusCode = HttpStatusCode.BadRequest
-											};
-										}
-										break;
-									}
-								}
-								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.Viewers),
-									StatusCode = HttpStatusCode.OK
-								};
-								break;
-
-							case "/preferences":
-							case "/preferences/":
-								try {
-									uint viewer_id = uint.Parse(apigProxyEvent.QueryStringParameters["viewer_id"]);
-									response = new StableAPIResponse() {
-										Body = JsonConvert.SerializeObject(ctx.GetPreferences(viewer_id)),
-										StatusCode = HttpStatusCode.OK
-									};
-								} catch (Exception e) {
-									response = new StableAPIResponse() {
-										Body = JsonConvert.SerializeObject(new Result(e)),
-										StatusCode = HttpStatusCode.BadRequest
-									};
-								}
-								break;
-							
 							case "/schedule":
 							case "/schedule/":
-								if(apigProxyEvent.QueryStringParameters != null)
-									if(apigProxyEvent.QueryStringParameters.ContainsKey("viewer_id")) {
-										try {
-											uint viewer_id = uint.Parse(apigProxyEvent.QueryStringParameters["viewer_id"]);
-
-											var regs = ctx.registrations.Where(thus => thus.viewer_id == viewer_id).ToList();
-											response = new StableAPIResponse() {
-												Body = JsonConvert.SerializeObject(regs),
-												StatusCode = HttpStatusCode.OK
-											};
-											break;
-										} catch (Exception e) {
-											Logger.LogLine(e.ToString());
-											response = new StableAPIResponse() {
-												Body = JsonConvert.SerializeObject(new Result(e)),
-												StatusCode = HttpStatusCode.BadRequest
-											};
-										}
-										break;
-									}
 								response = new StableAPIResponse() {
 									Body = JsonConvert.SerializeObject(ctx.Schedule),
 									StatusCode = HttpStatusCode.OK
 								};
 								break;
-							case "/print":
-							case "/print/":
-								response = HandlePrint(apigProxyEvent, ctx);
-								break;
-							case "/full":
-							case "/full/":
+							case "/scores":
+							case "/scores/":
 								response = new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(ctx.FullPresentations),
+									Body = JsonConvert.SerializeObject(ctx.Scores),
 									StatusCode = HttpStatusCode.OK
 								};
+								break;
+							case "/score_type":
+							case "/score_type/":
+								response = new StableAPIResponse() {
+									Body = JsonConvert.SerializeObject(ctx.ScoreType),
+									StatusCode = HttpStatusCode.OK
+								};
+								break;
+							case "/print":
+							case "/print/":
+								//response = HandlePrint(apigProxyEvent, ctx);
 								break;
 							default:
 								break;
@@ -294,62 +158,26 @@ namespace StableAPIHandler {
 					case "POST":
 						#region POSTs
 						switch(apigProxyEvent.Path.ToLower()) {
-							case "/dates":
-							case "/dates/":
-								response = HandlePOST<Date>(apigProxyEvent, ctx);
-								break;
-							case "/blocks":
-							case "/blocks/":
-								response = HandlePOST<Block>(apigProxyEvent, ctx);
-								break;
-							case "/grades":
-							case "/grades/":
-								response = HandlePOST<Grade>(apigProxyEvent, ctx);
-								break;
-							case "/houses":
-							case "/houses/":
-								response = HandlePOST<House>(apigProxyEvent, ctx);
-								break;
-							case "/locations":
-							case "/locations/":
-								response = HandlePOST<Location>(apigProxyEvent, ctx);
-								break;
-							case "/presentations":
-							case "/presentations/":
-								response = HandlePOST<Presentation>(apigProxyEvent, ctx);
-								break;
-							case "/viewers":
-							case "/viewers/":
-								//response = HandlePOST<Viewer>(apigProxyEvent, ctx);
-								break;
 
-							case "/signup":
-							case "/signup/":
-								if(!enabled)
-									return noSignups;
-								response = startSignup(apigProxyEvent, ctx);
+							case "/games":
+							case "/games/":
+								response = HandlePOST<Game>(apigProxyEvent, ctx);
 								break;
-							case "/register":
-							case "/register/":
-								if(!enabled)
-									return noSignups;
-								if(freeforall)
-									response = handleRegister(apigProxyEvent, ctx);
-								else
-									response = new StableAPIResponse() {
-										Body = "{}",
-										StatusCode = HttpStatusCode.Forbidden
-									};
+							case "/participants":
+							case "/participants/":
+								response = HandlePOST<Participant>(apigProxyEvent, ctx);
 								break;
-
-							case "/signup/finish":
-							case "/signup/finish/":
-								if(!enabled)
-									return noSignups;
-								if(freeforall)
-									response = finishRegister(apigProxyEvent, ctx, context);
-								else
-									response = finishSignup(apigProxyEvent, ctx, context);
+							case "/schedule":
+							case "/schedule/":
+								response = HandlePOST<Schedule>(apigProxyEvent, ctx);
+								break;
+							case "/scores":
+							case "/scores/":
+								response = HandlePOST<Score>(apigProxyEvent, ctx);
+								break;
+							case "/score_type":
+							case "/score_type/":
+								response = HandlePOST<ScoreType>(apigProxyEvent, ctx);
 								break;
 						}
 						#endregion
@@ -357,33 +185,25 @@ namespace StableAPIHandler {
 					case "PUT":
 						#region PUTs
 						switch(apigProxyEvent.Path.ToLower()) {
-							case "/dates":
-							case "/dates/":
-								response = HandlePUT<Date>(apigProxyEvent, ctx);
+							case "/games":
+							case "/games/":
+								response = HandlePUT<Game>(apigProxyEvent, ctx);
 								break;
-							case "/blocks":
-							case "/blocks/":
-								response = HandlePUT<Block>(apigProxyEvent, ctx);
+							case "/participants":
+							case "/participants/":
+								response = HandlePUT<Participant>(apigProxyEvent, ctx);
 								break;
-							case "/grades":
-							case "/grades/":
-								response = HandlePUT<Grade>(apigProxyEvent, ctx);
+							case "/schedule":
+							case "/schedule/":
+								response = HandlePUT<Schedule>(apigProxyEvent, ctx);
 								break;
-							case "/houses":
-							case "/houses/":
-								response = HandlePUT<House>(apigProxyEvent, ctx);
+							case "/scores":
+							case "/scores/":
+								response = HandlePUT<Score>(apigProxyEvent, ctx);
 								break;
-							case "/locations":
-							case "/locations/":
-								response = HandlePUT<Location>(apigProxyEvent, ctx);
-								break;
-							case "/presentations":
-							case "/presentations/":
-								response = HandlePUT<Presentation>(apigProxyEvent, ctx);
-								break;
-							case "/viewers":
-							case "/viewers/":
-								response = HandlePUT<Viewer>(apigProxyEvent, ctx);
+							case "/score_type":
+							case "/score_type/":
+								response = HandlePUT<ScoreType>(apigProxyEvent, ctx);
 								break;
 						}
 						break;
@@ -391,33 +211,25 @@ namespace StableAPIHandler {
 					case "DELETE":
 						#region DELETEs
 						switch(apigProxyEvent.Path.ToLower()) {
-							case "/dates":
-							case "/dates/":
-								response = HandleDELETE<Date>(apigProxyEvent, ctx);
+							case "/games":
+							case "/games/":
+								response = HandleDELETE<Game>(apigProxyEvent, ctx);
 								break;
-							case "/blocks":
-							case "/blocks/":
-								response = HandleDELETE<Block>(apigProxyEvent, ctx);
+							case "/participants":
+							case "/participants/":
+								response = HandleDELETE<Participant>(apigProxyEvent, ctx);
 								break;
-							case "/grades":
-							case "/grades/":
-								response = HandleDELETE<Grade>(apigProxyEvent, ctx);
+							case "/schedule":
+							case "/schedule/":
+								response = HandleDELETE<Schedule>(apigProxyEvent, ctx);
 								break;
-							case "/houses":
-							case "/houses/":
-								response = HandleDELETE<House>(apigProxyEvent, ctx);
+							case "/scores":
+							case "/scores/":
+								response = HandleDELETE<Score>(apigProxyEvent, ctx);
 								break;
-							case "/locations":
-							case "/locations/":
-								response = HandleDELETE<Location>(apigProxyEvent, ctx);
-								break;
-							case "/presentations":
-							case "/presentations/":
-								response = HandleDELETE<Presentation>(apigProxyEvent, ctx);
-								break;
-							case "/viewers":
-							case "/viewers/":
-								response = HandleDELETE<Viewer>(apigProxyEvent, ctx);
+							case "/score_type":
+							case "/score_type/":
+								response = HandleDELETE<ScoreType>(apigProxyEvent, ctx);
 								break;
 							default:
 								break;
@@ -562,123 +374,8 @@ namespace StableAPIHandler {
 				return StableAPIResponse.BadRequest(e);
 			}
 		}
-		private StableAPIResponse startSignup(APIGatewayProxyRequest request, StableContext ctx) {
-			try {
-				SignupRequest sr = JsonConvert.DeserializeObject<SignupRequest>(request.Body);
-				try {
-					// Create viewer entry first, so if they don't submit properly
-					// we'll have their info and can randomly place them.
-					Viewer v = new Viewer() {
-						first_name = sr.first_name,
-						last_name = sr.last_name,
-						grade_id = sr.grade,
-						house_id = sr.house,
-						viewer_key = Guid.NewGuid().ToString().Substring(0, 16)
-					};
-
-					using(var tx = ctx.Database.BeginTransaction()) {
-						try {
-							ctx.viewers.Add(v);
-							ctx.SaveChanges();
-							tx.Commit();
-
-							return new StableAPIResponse() {
-								Body = JsonConvert.SerializeObject(new SignupResponse(v) {
-									status = true
-								}),
-								StatusCode = HttpStatusCode.OK
-							};
-
-						} catch(Exception e) {
-							tx.Rollback();
-							return new StableAPIResponse() {
-								Body = JsonConvert.SerializeObject(new Result(e)),
-								StatusCode = HttpStatusCode.InternalServerError
-							};
-						}
-					}
-				} catch (Exception e) {
-					return new StableAPIResponse() {
-						Body = JsonConvert.SerializeObject(new Result(e)),
-						StatusCode = HttpStatusCode.InternalServerError
-					};
-				}
-			} catch(Exception e) {
-				return StableAPIResponse.BadRequest(e);
-			}
-		}
-		private StableAPIResponse finishSignup(APIGatewayProxyRequest apigProxyEvent, StableContext ctx, ILambdaContext context) {
-			try {
-				var req = JsonConvert.DeserializeObject<FinishSignupRequest>(apigProxyEvent.Body);
-				req.status = true;
-
-				try {
-					if(ctx.viewers.Count(thus => thus.viewer_id == req.viewer_id && thus.viewer_key == req.viewer_key && !thus.Saved()) != 1)
-						return new StableAPIResponse() {
-							Body = "{}",
-							StatusCode = HttpStatusCode.Unauthorized
-						};
-					List<Preference> toAdd = new List<Preference>();
-					for(int x = 0; x < req.data.Count; x++) {
-						toAdd.Add(new Preference() {
-							viewer_id = req.viewer_id,
-							order = (uint)(x + 1),
-							presentation_id = req.data[x]
-						});
-					}
-					using(var tx = ctx.Database.BeginTransaction()) {
-						try {
-							foreach(Preference p in toAdd) {
-								ctx.preferences.Add(p);
-							}
-							Viewer v = ctx.viewers.FirstOrDefault(thus => thus.viewer_id == req.viewer_id && thus.viewer_key == req.viewer_key);
-							v.saved = 1;
-							ctx.SaveChanges();
-							tx.Commit();
-						} catch(DbUpdateException e) {
-							tx.Rollback();
-							if(e.InnerException != null) {
-								if(e.InnerException.GetType() == typeof(MySqlException)) {
-									var me = e.InnerException as MySqlException;
-									return new StableAPIResponse() {
-										Body = JsonConvert.SerializeObject(new SignupErrorResponse(me.Number)),
-										StatusCode = HttpStatusCode.OK
-									};
-								}
-							}
-							return new StableAPIResponse() {
-								Body = JsonConvert.SerializeObject(e),
-								StatusCode = HttpStatusCode.InternalServerError
-							};
-						} catch(Exception e) {
-							tx.Rollback();
-							var expt = e;
-							while(expt != null) {
-								context.Logger.LogLine(expt.Message);
-								expt = expt.InnerException;
-							}
-							return new StableAPIResponse() {
-								Body = JsonConvert.SerializeObject(new Result(e)),
-								StatusCode = HttpStatusCode.InternalServerError
-							};
-
-						}
-					}
-				} catch(Exception e) {
-					return new StableAPIResponse() {
-						Body = JsonConvert.SerializeObject(new Result(e)),
-						StatusCode = HttpStatusCode.InternalServerError
-					};
-					
-				}
-				return new StableAPIResponse() {
-					StatusCode = HttpStatusCode.OK,
-					Body = JsonConvert.SerializeObject(req)
-				};
-			} catch(Exception e) {
-				return StableAPIResponse.BadRequest(e);
-			}
-		}
+		
+		/*
 		private StableAPIResponse HandlePrint(APIGatewayProxyRequest request, StableContext ctx) {
 
 			uint pres_id;
@@ -733,161 +430,8 @@ namespace StableAPIHandler {
 				throw;
 			}
 		}
-		private StableAPIResponse handleRegister(APIGatewayProxyRequest request, StableContext ctx) {
-			try {
-				var req = JsonConvert.DeserializeObject<RegistrationRequest>(request.Body);
-				try {
-					if(ctx.viewers.Count(thus => thus.viewer_id == req.viewer_id && thus.viewer_key == req.viewer_key) != 1) {
-						return StableAPIResponse.Unauthorized;
-					}
-					if(ctx.viewers.Count(thus => thus.viewer_id == req.viewer_id && thus.Saved()) == 1) {
-						return new StableAPIResponse() {
-							StatusCode = HttpStatusCode.OK,
-							Body = JsonConvert.SerializeObject(new RegistrationResponse() {
-								status = false,
-								error = new ViewerSavedError() {
-									code = 103,
-									message = "Viewer already saved, no further changes are allowed."
-								}
-							})
-						};
-					}
-
-					if(ctx.schedule.Count(thus => thus.date == req.date && thus.block_id == req.block_id && thus.presentation_id == req.presentation_id) != 1)
-						return StableAPIResponse.BadRequest(new Exception("Presentation instance not found!"));
-
-					//attempt to update presentations
-					try {
-						using(var tx = ctx.Database.BeginTransaction()) {
-							try {
-								int viewer_count = ctx.registrations.Count(thus => thus.date == req.date && thus.block_id == req.block_id && thus.presentation_id == req.presentation_id);
-								Registration existing = ctx.registrations.SingleOrDefault(thus => thus.date == req.date && thus.block_id == req.block_id && thus.viewer_id == req.viewer_id);
-
-								if(viewer_count < 9) {
-									if(existing == null) {
-										ctx.registrations.Add(new Registration() {
-											date = req.date,
-											block_id = req.block_id,
-											presentation_id = req.presentation_id,
-											viewer_id = req.viewer_id
-										});
-									} else {
-										if(existing.presentation_id != req.presentation_id) {
-											existing.presentation_id = req.presentation_id;
-										}
-									}
-
-								} else {
-									throw new InvalidOperationException("Presentation is full!");
-								}
-
-								ctx.SaveChanges();
-								tx.Commit();
-								return new StableAPIResponse() {
-									StatusCode = HttpStatusCode.OK,
-									Body = JsonConvert.SerializeObject(new RegistrationResponse() {
-										status = true,
-										data = ctx.registrations.Where(thus => thus.viewer_id == req.viewer_id).ToList(),
-										full = ctx.FullPresentations
-									})
-								};
-								//todo details & full error
-							} catch(Exception e) when (e is InvalidOperationException || e is DbUpdateException) {
-								tx.Rollback();
-								if(e.InnerException != null) {
-									if(e.InnerException.GetType() == typeof(MySqlException)) {
-										var me = e.InnerException as MySqlException;
-										return new StableAPIResponse() {
-											Body = JsonConvert.SerializeObject(new SignupErrorResponse(me.Number) {
-												data = ctx.registrations.Where(thus => thus.viewer_id == req.viewer_id).ToList(),
-												full = ctx.FullPresentations
-											}),
-											StatusCode = HttpStatusCode.OK
-										};
-									}
-								}
-								return new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(new SignupErrorResponse() {
-										Message = e.Message,
-										data = ctx.registrations.Where(thus => thus.viewer_id == req.viewer_id).ToList(),
-										full = ctx.FullPresentations
-									}),
-									StatusCode = HttpStatusCode.InternalServerError
-								};
-							} catch(Exception e) {
-								tx.Rollback();
-								var expt = e;
-								while(expt != null) {
-									Logger.LogLine(expt.Message);
-									expt = expt.InnerException;
-								}
-								return new StableAPIResponse() {
-									Body = JsonConvert.SerializeObject(new Result(e)),
-									StatusCode = HttpStatusCode.InternalServerError
-								};
-
-							}
-
-						}
-					} catch(Exception e) {
-
-					}
-
-					return StableAPIResponse.OK;
-				} catch(Exception e) {
-					return StableAPIResponse.InternalServerError(e);
-				}
-			} catch (Exception e) {
-				Logger.LogLine(e.Message.ToString());
-				return StableAPIResponse.BadRequest(e);
-			}
-		}
-		private StableAPIResponse finishRegister(APIGatewayProxyRequest request, StableContext ctx, ILambdaContext context) {
-			try {
-				var req = JsonConvert.DeserializeObject<FinishSignupRequest>(request.Body);
-				req.status = true;
-
-				try {
-					if(ctx.viewers.Count(thus => thus.viewer_id == req.viewer_id && thus.viewer_key == req.viewer_key) != 1)
-						return StableAPIResponse.Unauthorized;
-
-					using(var tx = ctx.Database.BeginTransaction()) {
-						try {
-							Viewer v = ctx.viewers.First(thus => thus.viewer_id == req.viewer_id && !thus.Saved());
-							v.saved = 1;
-							tx.Commit();
-							ctx.SaveChanges();
-						} catch(Exception e) {
-							tx.Rollback();
-							return new StableAPIResponse() {
-								StatusCode = HttpStatusCode.OK,
-								Body = JsonConvert.SerializeObject(new RegistrationResponse() {
-									status = false,
-									error = new ViewerSavedError() {
-										code = 103,
-										message = "Viewer already saved, no further changes are allowed."
-									}
-								})
-							};
-						}
-					}
-					
-
-				} catch(Exception e) {
-					return new StableAPIResponse() {
-						Body = JsonConvert.SerializeObject(new Result(e)),
-						StatusCode = HttpStatusCode.InternalServerError
-					};
-
-				}
-				return new StableAPIResponse() {
-					StatusCode = HttpStatusCode.OK,
-					Body = JsonConvert.SerializeObject(req)
-				};
-			} catch(Exception e) {
-				return StableAPIResponse.BadRequest(e);
-			}
-		}
+		*/
+	
 	}
 	public class StableAPIResponse : APIGatewayProxyResponse {
 		public StableAPIResponse() {

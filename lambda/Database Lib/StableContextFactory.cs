@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace ProjectStableLibrary {
+namespace DatabaseLib {
 	public class StableContextFactory {
 		public static StableContext Build(string conStr) {
 			var optionsBuilder = new DbContextOptionsBuilder<StableContext>();
@@ -20,173 +20,102 @@ namespace ProjectStableLibrary {
 			//Model.
 		}
 		protected override void OnModelCreating(ModelBuilder modelBuilder) {
-			modelBuilder.Entity<Preference>()
-				.HasKey(c => new {
-					c.viewer_id,
-					c.order
-				});
 			modelBuilder.Entity<Schedule>()
 				.HasKey(c => new {
-					c.date,
-					c.block_id,
-					c.presentation_id
+					c.p_id,
+					c.block,
+					c.g_id
 				});
-			modelBuilder.Entity<Registration>()
+			modelBuilder.Entity<Score>()
 				.HasKey(c => new {
-					c.date,
-					c.block_id,
-					c.viewer_id
+					c.g_id,
+					c.p_id
 				});
+
+			modelBuilder.Entity<Game>()
+				.HasIndex(c => c.score_type);
+
 		}
 
-		public DbSet<Date> dates {
+		public DbSet<Game> games {
 			get;
 			set;
 		}
-		public List<Date> Dates {
+		public Dictionary<uint, Game> Games {
 			get {
-				return dates.ToList();
-			}
-		}
-		public DbSet<Block> blocks {
-			get;
-			set;
-		}
-		public Dictionary<uint, Block> Blocks {
-			get {
-				Dictionary<uint, Block> blocks = new Dictionary<uint, Block>();
-				foreach(Block b in this.blocks) {
-					blocks.Add(b.block_id, b);
+				var result = new Dictionary<uint, Game>();
+
+				foreach(var g in games.ToList()) {
+					g.host_key = null;
+					result.Add(g.id, g);
 				}
 
-				return blocks;
+				return result;
 			}
 		}
-		public DbSet<Grade> grades {
+		public DbSet<Participant> participants {
 			get;
 			set;
 		}
-		public Dictionary<uint, Grade> Grades {
+		public Dictionary<uint, Participant> Participants {
 			get {
-				Dictionary<uint, Grade> grades = new Dictionary<uint, Grade>();
-				foreach(Grade g in this.grades) {
-					grades.Add(g.grade_id, g);
+				var result = new Dictionary<uint, Participant>();
+
+				foreach(var p in participants.ToList()) {
+					result.Add(p.id, p);
 				}
 
-				return grades;
+				return result;
 			}
-		}
-		public DbSet<House> houses {
-			get;
-			set;
-		}
-		public Dictionary<uint, House> Houses {
-			get {
-				Dictionary<uint, House> houses = new Dictionary<uint, House>();
-				foreach(House h in this.houses) {
-					houses.Add(h.house_id, h);
-				}
-
-				return houses;
-			}
-		}
-		public DbSet<Location> locations {
-			get;
-			set;
-		}
-		public Dictionary<uint, Location> Locations {
-			get {
-				Dictionary<uint, Location> locations = new Dictionary<uint, Location>();
-				foreach(Location l in this.locations) {
-					locations.Add(l.location_id, l);
-				}
-
-				return locations;
-			}
-		}
-		public DbSet<Presentation> presentations {
-			get;
-			set;
-		}
-		public Dictionary<uint, Presentation> Presentations {
-			get {
-				Dictionary<uint, Presentation> presentations = new Dictionary<uint, Presentation>();
-				foreach(Presentation p in this.presentations) {
-					presentations.Add(p.presentation_id, p);
-				}
-
-				return presentations;
-			}
-		}
-		public DbSet<Viewer> viewers {
-			get;
-			set;
-		}
-		public Dictionary<uint, SanitizedViewer> Viewers {
-			get {
-				Dictionary<uint, SanitizedViewer> viewers = new Dictionary<uint, SanitizedViewer>();
-				foreach(Viewer v in this.viewers) {
-					viewers.Add(v.viewer_id, v.Sanitize());
-				}
-
-				return viewers;
-			}
-		}
-		public DbSet<Preference> preferences {
-			get;
-			set;
-		}
-		public Dictionary<uint, Dictionary<uint, List<uint>>> GetPreferences(uint viewer_id) {
-			var data = new Dictionary<uint, Dictionary<uint, List<uint>>>();
-			var fetchedDates = dates.ToList();
-			var fetchedBlocks = blocks.ToList();
-			foreach(Date date in fetchedDates) {
-				foreach(Block block in fetchedBlocks) {
-					if(!data.ContainsKey(date.date))
-						data.Add(date.date, new Dictionary<uint, List<uint>>());
-
-					data[date.date].Add(block.block_id, GetPreferences(viewer_id, date.date, block.block_id));
-				}
-			}
-
-			return data;
-		}
-		public List<uint> GetPreferences(uint viewer_id, uint date, uint block_id) {
-			var subset = from thus in preferences
-						 where thus.viewer_id == viewer_id
-						 orderby thus.order
-						 select thus.presentation_id;
-
-			return subset.ToList();
 		}
 		public DbSet<Schedule> schedule {
 			get;
 			set;
 		}
-		public List<Schedule> Schedule {
+		public Dictionary<uint, List<Schedule>> Schedule {
 			get {
-				var set  = from thus in schedule
-							orderby thus.date, thus.block_id select thus;
-				
-				return set.ToList();
+				var result = new Dictionary<uint, List<Schedule>>();
+				foreach(var s in schedule.OrderBy(thus => thus.p_id)) {
+					if(!result.ContainsKey(s.block))
+						result.Add(s.block, new List<DatabaseLib.Schedule>());
+
+					result[s.block].Add(s);
+				}
+				return result;
 			}
 		}
-
-		public DbSet<Registration> registrations {
+		public DbSet<Score> scores {
 			get;
 			set;
 		}
-		public List<Schedule> FullPresentations {
+		public Dictionary<uint, Dictionary<uint, uint>> Scores {
 			get {
-				List<Schedule> full = new List<Schedule>();
-				var sche = this.Schedule;
-				foreach(var s in sche) {
-					if(registrations.Count(thus =>
-						thus.Schedule.Equals(s)) >= 10)
-						full.Add(s);
+				var result = new Dictionary<uint, Dictionary<uint, uint>>();
+
+				foreach(var s in scores) {
+					if(!result.ContainsKey(s.g_id))
+						result.Add(s.g_id, new Dictionary<uint, uint>());
+
+
+					result[s.g_id].Add(s.p_id, s.value);
 				}
 
-				return full;
+				return result;
+			}
+		}
+		public DbSet<ScoreType> score_type {
+			get;
+			set;
+		}
+		public Dictionary<uint, ScoreType> ScoreType {
+			get {
+				var result = new Dictionary<uint, ScoreType>();
+
+				foreach(var s in score_type.ToList()) {
+					result.Add(s.id, s);
+				}
+
+				return result;
 			}
 		}
 
