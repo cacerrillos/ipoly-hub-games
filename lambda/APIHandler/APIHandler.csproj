@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ProjectStableLibrary\ProjectStableLibrary.csproj" />
+    <ProjectReference Include="..\ProjectStableLibrary\Database Lib.csproj" />
   </ItemGroup>
 
 </Project>

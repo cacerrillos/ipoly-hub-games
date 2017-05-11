@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectStableLibrary", "ProjectStableLibrary\ProjectStableLibrary.csproj", "{8766DFC8-A088-45E1-BE65-E39DF9A4EF15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database Lib", "Database Lib\Database Lib.csproj", "{8766DFC8-A088-45E1-BE65-E39DF9A4EF15}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APIHandler", "APIHandler\APIHandler.csproj", "{3B868BC1-64BC-4E4B-821A-DE368B0CA515}"
 EndProject
