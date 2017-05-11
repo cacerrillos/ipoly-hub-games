@@ -88,16 +88,16 @@ namespace DatabaseLib {
 			get;
 			set;
 		}
-		public Dictionary<uint, Dictionary<uint, uint>> Scores {
+		public Dictionary<uint, List<Score>> Scores {
 			get {
-				var result = new Dictionary<uint, Dictionary<uint, uint>>();
+				var result = new Dictionary<uint, List<Score>>();
 
 				foreach(var s in scores) {
 					if(!result.ContainsKey(s.g_id))
-						result.Add(s.g_id, new Dictionary<uint, uint>());
+						result.Add(s.g_id, new List<Score>());
 
 
-					result[s.g_id].Add(s.p_id, s.value);
+					result[s.g_id].Add(s);
 				}
 
 				return result;
