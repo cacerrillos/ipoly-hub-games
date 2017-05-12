@@ -14,6 +14,7 @@
 <link rel="import" href="../../bower_components/paper-radio-button/paper-radio-button.html">
 <link rel="import" href="../../bower_components/paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
 <link rel="import" href="hub-styles.html">
 <!--
 A comment describing this element
@@ -72,6 +73,7 @@ Example:
         max-width: 64px;
       }
     </style>
+    <app-localstorage-document id="storage" key="admincode" data="{{adminCode}}"></app-localstorage-document>
     <app-route route="{{route}}" pattern="/games/:id" data="{{routeData}}" active="{{editActive}}"></app-route>
 
     <template is="dom-if" if="[[!editActive]]">
@@ -86,7 +88,7 @@ Example:
           <template is="dom-repeat" items="[[gamesArray]]" as="game">
             <tr class="hover">
               <td class="rightalign">
-                <paper-icon-button icon="icons:assessment" on-tap="_edit"></paper-icon-button>
+                <paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button>
               </td>
               
               <td>[[game.title]]</td>
@@ -116,7 +118,10 @@ Example:
               <td>[[result.rank]]</td>
               <td>[[_getAttrFromObj(result.p_id, 'name', participants)]]</td>
               <td>[[_parseScore(result.score_type, result.value)]]</td>
-              <td hidden="[[!isAdmin]]"><paper-icon-button icon="icons:create"></paper-icon-button></td>
+              <td hidden="[[!isAdmin]]">
+                <paper-icon-button icon="icons:create" on-tap="_editScoreDialog"></paper-icon-button>
+                <paper-icon-button icon="icons:delete" on-tap="_deleteAjax"></paper-icon-button>
+              </td>
             </tr>
         </template>
         </table>
@@ -125,13 +130,28 @@ Example:
       <paper-fab class="edit-fab" icon="icons:create" on-tap="_editDialog"></paper-fab>
       <paper-fab class="submit-fab" icon="icons:assignment" on-tap="_submitDialog"></paper-fab>
     </template>
-
+    <iron-ajax
+      id="editAjax"
+      url="https://zerx6mo164.execute-api.us-east-2.amazonaws.com/v1/games"
+      method="PUT"
+      headers="[[_headers(adminCode)]]"
+      handle-as="json"
+      on-response="_editResponse"></iron-ajax>
+    <iron-ajax
+      id="scoresAjax"
+      url="https://zerx6mo164.execute-api.us-east-2.amazonaws.com/v1/scores"
+      headers="[[_headers(adminCode)]]"
+      handle-as="json"
+      on-response="_response"></iron-ajax>
     <paper-dialog id="editDialog" modal>
       <div>
         <h2 class="center">Edit Game</h2>
 
         
         <div class="layout vertical">
+        <paper-input label="Host" value="{{host::input}}"></paper-input>
+        <paper-input label="Title" value="{{title::input}}"></paper-input>
+        <paper-input label="Location" value="{{location::input}}"></paper-input>
         <paper-radio-group selected="{{scoreType}}">
           <paper-radio-button name="1">Absolute</paper-radio-button>
           <paper-radio-button name="2">Timed</paper-radio-button>
@@ -224,7 +244,8 @@ Example:
         },
         adminCode: {
           type: String,
-          value: ''
+          value: '',
+          observer: '_log'
         },
         absolute: {
           type: Boolean,
@@ -255,11 +276,28 @@ Example:
         hun: {
           type: Number,
           value: 0
+        },
+        host: {
+          type: String
+        },
+        title: {
+          type: String
+        },
+        location: {
+          type: String
         }
       },
       observers: [
         '_scoreType(games, routeData.id)'
       ],
+      _headers: function(adminCode) {
+        if(adminCode) {
+          return {
+            'admin_code': adminCode
+          };
+        }
+        return {};
+      },
       _scoreType: function(g, id) {
         if(g && id !== undefined) {
           this.absolute = g[id].score_type == 1;
@@ -272,8 +310,7 @@ Example:
         }
         return false;
       },
-      _edit: function(e) {
-        console.log(this.route);
+      _goGame: function(e) {
         var id = e.model.get('game.id');
         if(id !== undefined)
           this.set('route.path', '/games/' + id);
@@ -314,6 +351,16 @@ Example:
         }
         return s;
       },
+      _getScoreByTeam: function(scores, g_id, id) {
+        if(scores && g_id !== undefined && id !== undefined) {
+          if(scores[g_id]) {
+            for(var x = 0; x < scores[g_id].length; x++) {
+              if(scores[g_id][x].p_id == id)
+                return scores[g_id][x];
+            }
+          }
+        }
+      },
       _parseTime: function(e) {
         var m = Math.floor(e / (60 * 100));
         var s = Math.floor((e / 100) % 60);
@@ -339,9 +386,40 @@ Example:
         }
       },
       _editDialog: function(e) {
+        if(this.games && this.routeData.id)  {
+          var g = this.games[this.routeData.id];
+          if(g) {
+            this.scoreType = g.score_type;
+            this.direction = g.direction;
+            this.host = g.host;
+            this.title = g.title;
+            this.location = g.location;
+            this.$.editDialog.open();
+          }
+        }
+        
+      },
+      _editScoreDialog: function(e) {
+        var id = e.model.get('result.p_id');
+        this.submitTeam = id;
         this.scoreType = this.games[this.routeData.id].score_type;
-        this.direction = this.games[this.routeData.id].direction;
-        this.$.editDialog.open();
+        var score = this._getScoreByTeam(this.scores, this.routeData.id, id);
+        this.score = score.value;
+        this.min = Math.floor(score.value / (60 * 100));
+        this.sec = Math.floor((score.value / 100) % 60);
+        this.hun = score.value % 100;
+        this.$.scoresAjax.method = "PUT";
+        this.$.submitDialog.open();
+      },
+      _deleteAjax: function(e) {
+        var id = e.model.get('result.p_id');
+        this.$.scoresAjax.method = "DELETE";
+        var o = {
+          'g_id': this.routeData.id,
+          'p_id': id
+        };
+        this.$.scoresAjax.body = JSON.stringify(o);
+        this.$.scoresAjax.generateRequest();
       },
       _submitDialog: function(e) {
         this.scoreType = this.games[this.routeData.id].score_type;
@@ -349,16 +427,25 @@ Example:
         this.min = 0;
         this.sec = 0;
         this.hun = 0;
+        this.$.scoresAjax.method = "POST";
         this.$.submitDialog.open();
       },
       _edit: function(e) {
+        var g = this.games[this.routeData.id];
         var o = {
           'id': this.routeData.id,
+          'host': this.host,
+          'title': this.title,
+          'location': this.location,
           'score_type': this.scoreType,
-          'direction': this.direction
+          'direction': this.direction,
         };
         console.log(o);
+        this.$.editAjax.body = JSON.stringify(o);
+        this.$.editAjax.generateRequest();
+        this.$.storage.saveValue('admincode');
       },
+
       _submit: function(e) {
 
         var value;
@@ -371,17 +458,32 @@ Example:
           value = h + 100 * s + 100 * 60 * m;
         }
         var o = {
-          'g_id': this.routeData.id,
+          'g_id': parseInt(this.routeData.id),
           'p_id': this.submitTeam,
           'value': value
         };
         console.log(o);
+        this.$.scoresAjax.body = JSON.stringify(o);
+        this.$.scoresAjax.generateRequest();
+        this.$.storage.saveValue('admincode');
+        // console.log(o);
       },
       _response: function(e) {
         this._reset();
+        console.log(e);
+        this.$.submitDialog.close();
+        this.fire('reload-data');
+      },
+      _editResponse: function(e) {
+        console.log(e);
+        this.$.editDialog.close();
+        this.fire('reload-data');
       },
       _reset: function(e) {
         this.submitTeam = -1;
+      },
+      _log: function(e) {
+        console.log(e);
       }
     });
   </script>
