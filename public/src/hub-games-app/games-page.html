@@ -28,18 +28,16 @@ Example:
         display: block;
       }
       paper-material {
-        width: 440px;
-        margin-left: auto;
-        margin-right: auto;
+        max-width: 440px;
       }
       .details {
-        width: 350px;
+        max-width: 350px;
       }
     </style>
     <app-route route="{{route}}" pattern="/games/:id" data="{{routeData}}" active="{{editActive}}"></app-route>
 
     <template is="dom-if" if="[[!editActive]]">
-      <paper-material elevation="1">
+      <paper-material elevation="1" class="center">
         <table>
           <tr>
             <th></th>
@@ -63,7 +61,7 @@ Example:
       </paper-material>
     </template>
     <template is="dom-if" if="[[editActive]]">
-      <paper-material elevation="1" class="details">
+      <paper-material elevation="1" class="details center">
         <h2>[[_getAttrFromObj(routeData.id, 'host', games)]] - [[_getAttrFromObj(routeData.id, 'title', games)]]</h2>
         <!-- <paper-spinner active></paper-spinner> -->
         <table>
