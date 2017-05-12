@@ -35,6 +35,8 @@ namespace DatabaseLib {
 			modelBuilder.Entity<Game>()
 				.HasIndex(c => c.score_type);
 
+			modelBuilder.Entity<Score>()
+					.ToTable("scores");
 		}
 
 		public DbSet<Game> games {
@@ -46,7 +48,6 @@ namespace DatabaseLib {
 				var result = new Dictionary<uint, Game>();
 
 				foreach(var g in games.ToList()) {
-					g.host_key = null;
 					result.Add(g.id, g);
 				}
 

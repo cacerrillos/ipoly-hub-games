@@ -13,11 +13,6 @@ namespace DatabaseLib {
 			set;
 		}
 		[MaxLength(255)]
-		public string host_key {
-			get;
-			set;
-		}
-		[MaxLength(255)]
 		public string host {
 			get;
 			set;

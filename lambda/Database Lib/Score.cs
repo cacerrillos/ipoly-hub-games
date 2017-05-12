@@ -12,7 +12,6 @@ namespace DatabaseLib {
 			get;
 			set;
 		}
-		[Key]
 		public uint p_id {
 			get;
 			set;

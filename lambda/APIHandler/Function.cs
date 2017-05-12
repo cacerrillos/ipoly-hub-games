@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializerAttribute(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -187,23 +188,79 @@ namespace APIHandler {
 						switch(apigProxyEvent.Path.ToLower()) {
 							case "/games":
 							case "/games/":
-								response = HandlePUT<Game>(apigProxyEvent, ctx);
+								response = HandlePUT<Game>(apigProxyEvent, ctx, (o, tx) => {
+									var g = ctx.games.FirstOrDefault(thus => thus.id == o.id);
+									ctx.Entry(g).CurrentValues.SetValues(o);
+									
+									//var existing = ctx.Attach(o);
+									//ctx.Entry(existing).State = EntityState.Modified;
+									int status = ctx.SaveChanges();
+									tx.Commit();
+									return new StableAPIResponse() {
+										Body = JsonConvert.SerializeObject((status == 1)),
+										StatusCode = HttpStatusCode.OK
+									};
+								});
 								break;
 							case "/participants":
 							case "/participants/":
-								response = HandlePUT<Participant>(apigProxyEvent, ctx);
+								response = HandlePUT<Participant>(apigProxyEvent, ctx, (o, tx) => {
+									var g = ctx.participants.FirstOrDefault(thus => thus.id == o.id);
+									ctx.Entry(g).CurrentValues.SetValues(o);
+									//var existing = ctx.Attach(o);
+									//ctx.Entry(existing).State = EntityState.Modified;
+									int status = ctx.SaveChanges();
+									tx.Commit();
+									return new StableAPIResponse() {
+										Body = JsonConvert.SerializeObject((status == 1)),
+										StatusCode = HttpStatusCode.OK
+									};
+								});
 								break;
 							case "/schedule":
 							case "/schedule/":
-								response = HandlePUT<Schedule>(apigProxyEvent, ctx);
+								//response = HandlePUT<Schedule>(apigProxyEvent, ctx, (o, tx) => {
+								//	var g = ctx.schedule.FirstOrDefault(thus => thus.g_id == o.g_id &&);
+								//	ctx.Entry(g).CurrentValues.SetValues(o);
+								//	//var existing = ctx.Attach(o);
+								//	//ctx.Entry(existing).State = EntityState.Modified;
+								//	int status = ctx.SaveChanges();
+								//	tx.Commit();
+								//	return new StableAPIResponse() {
+								//		Body = JsonConvert.SerializeObject((status == 1)),
+								//		StatusCode = HttpStatusCode.OK
+								//	};
+								//});
 								break;
 							case "/scores":
 							case "/scores/":
-								response = HandlePUT<Score>(apigProxyEvent, ctx);
+								response = HandlePUT<Score>(apigProxyEvent, ctx, (o, tx) => {
+									var g = ctx.scores.FirstOrDefault(thus => thus.g_id == o.g_id && thus.p_id == o.p_id);
+									ctx.Entry(g).CurrentValues.SetValues(o);
+									//var existing = ctx.Attach(o);
+									//ctx.Entry(existing).State = EntityState.Modified;
+									int status = ctx.SaveChanges();
+									tx.Commit();
+									return new StableAPIResponse() {
+										Body = JsonConvert.SerializeObject((status == 1)),
+										StatusCode = HttpStatusCode.OK
+									};
+								});
 								break;
 							case "/score_type":
 							case "/score_type/":
-								response = HandlePUT<ScoreType>(apigProxyEvent, ctx);
+								response = HandlePUT<ScoreType>(apigProxyEvent, ctx, (o, tx) => {
+									var g = ctx.score_type.FirstOrDefault(thus => thus.id == o.id);
+									ctx.Entry(g).CurrentValues.SetValues(o);
+									//var existing = ctx.Attach(o);
+									//ctx.Entry(existing).State = EntityState.Modified;
+									int status = ctx.SaveChanges();
+									tx.Commit();
+									return new StableAPIResponse() {
+										Body = JsonConvert.SerializeObject((status == 1)),
+										StatusCode = HttpStatusCode.OK
+									};
+								});
 								break;
 						}
 						break;
@@ -285,7 +342,7 @@ namespace APIHandler {
 				return StableAPIResponse.BadRequest(e);
 			}
 		}
-		private StableAPIResponse HandlePUT<E>(APIGatewayProxyRequest request, StableContext ctx) where E : class {
+		private StableAPIResponse HandlePUT<E>(APIGatewayProxyRequest request, StableContext ctx, Func<E, IDbContextTransaction, StableAPIResponse> func) where E : class {
 			try {
 				string adminCode = Environment.GetEnvironmentVariable("admin_code");
 				if(adminCode == null || adminCode == "")
@@ -301,7 +358,8 @@ namespace APIHandler {
 
 				using(var tx = ctx.Database.BeginTransaction()) {
 					try {
-						var existing = ctx.Attach<E>(obj);
+						return func(obj, tx);
+						var existing = ctx.Attach(obj);
 						ctx.Entry(existing).State = EntityState.Modified;
 						int status = ctx.SaveChanges();
 						tx.Commit();
