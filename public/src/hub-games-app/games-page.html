@@ -162,14 +162,14 @@ Example:
               </template>
             </paper-listbox>
           </paper-dropdown-menu>
-          <paper-input label="Score" hidden="[[!absolute]]" type="number"></paper-input>
+          <paper-input id="s" label="Score" hidden="[[!absolute]]" type="number" value="{{score::input}}"></paper-input>
           
           <div class="layout horizontal" hidden="[[!timed]]">
-            <paper-input label="Min" class="time" min="0" size="3" type="number"></paper-input>
+            <paper-input id="m" label="Min" class="time" min="0" size="3" type="number" value="{{min::input}}"></paper-input>
             <div class="flex"></div>            
-            <paper-input label="Sec" class="time" min="0" max="59" size="3" type="number"></paper-input>
+            <paper-input id="s" label="Sec" class="time" min="0" max="59" size="3" type="number" value="{{sec::input}}"></paper-input>
             <div class="flex"></div>
-            <paper-input label="100ths" class="time" min="0" max="99" size="3" type="number"></paper-input>
+            <paper-input id="h" label="100ths" class="time" min="0" max="99" size="3" type="number" value="{{hun::input}}"></paper-input>
             <!-- <div class="flex"></div> -->
           </div>
           <paper-input label="Admin Code" value="{{adminCode::input}}" type="password"></paper-input>
@@ -238,6 +238,22 @@ Example:
         },
         direction: {
           type: Number
+        },
+        score: {
+          type: Number,
+          value: 0
+        },
+        min: {
+          type: Number,
+          value: 0
+        },
+        sec: {
+          type: Number,
+          value: 0
+        },
+        hun: {
+          type: Number,
+          value: 0
         }
       },
       observers: [
@@ -311,22 +327,36 @@ Example:
         this.$.editDialog.open();
       },
       _submitDialog: function(e) {
+        this.scoreType = this.games[this.routeData.id].score_type;
+        this.score = 0;
+        this.min = 0;
+        this.sec = 0;
+        this.hun = 0;
         this.$.submitDialog.open();
       },
       _edit: function(e) {
         var o = {
           'id': this.routeData.id,
           'score_type': this.scoreType,
-          'direction': this.direction,
-          'admin_code': this.adminCode
+          'direction': this.direction
         };
         console.log(o);
       },
       _submit: function(e) {
+
+        var value;
+        if(this.scoreType == 1) {
+          value = parseInt(this.score);
+        } else if(this.scoreType == 2) {
+          var m = parseInt(this.min);
+          var s = parseInt(this.sec);
+          var h = parseInt(this.hun);
+          value = h + 100 * s + 100 * 60 * m;
+        }
         var o = {
           'g_id': this.routeData.id,
           'p_id': this.submitTeam,
-          'admin_code': this.adminCode
+          'value': value
         };
         console.log(o);
       },
