@@ -215,7 +215,8 @@ Example:
         },
         isAdmin: {
           type: Boolean,
-          value: true
+          value: true,
+          computed: '_isAdmin(adminCode)'
         },
         submitTeam: {
           type: Number,
@@ -264,6 +265,12 @@ Example:
           this.absolute = g[id].score_type == 1;
           this.timed = g[id].score_type == 2;
         }
+      },
+      _isAdmin: function(e) {
+        if(e) {
+          return e.length > 0;
+        }
+        return false;
       },
       _edit: function(e) {
         console.log(this.route);
