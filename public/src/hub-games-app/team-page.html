@@ -167,11 +167,21 @@ Example:
         console.log(arr);
         return arr;
       },
+      _parseTime: function(e) {
+        var m = Math.floor(e / (60 * 100));
+        var s = Math.floor((e / 100) % 60);
+        var h = e % 100;
+        return this._padZero(m, 2) + ":" + this._padZero(s, 2) + ":" + this._padZero(h, 2);
+      },
+      _padZero: function(e, s) {
+        var r = "00" + e;
+        return r.substr(r.length - s);
+      },
       _parseScore: function(g, id, s) {
         if(g[id].score_type == 1) {
           return s;
         } else if(g[id].score_type == 2) {
-          return s + ' parse time';
+          return this._parseTime(score);
         }
         return s;
       },
