@@ -1,0 +1,203 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/app-route/app-route.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="hub-styles.html">
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+
+<dom-module id="team-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment hub-styles">
+      :host {
+        display: block;
+      }
+      paper-material {
+        width: 500px;
+      }
+      .scorecard {
+        width: 400px;
+      }
+    </style>
+    <app-route route="{{route}}" pattern="/teams/:id" data="{{routeData}}" active="{{detailsActive}}"></app-route>
+
+<!--     <template is="dom-if" if="[[!detailsActive]]">
+      <paper-material elevation="1">
+        <h3 class="center">Teams</h3>
+
+        <table>
+          <tr>
+            <td><h3>Team</h3></td>
+            <td><h3>Score</h3></td>
+          </tr>
+          <template is="dom-repeat" items="[[leaderboard]]" as="team">
+            <tr>
+              <td class="rightalign"><h4>[[team.rank]]</h4></td>
+              <td><h4>[[team.team]]</h4></td>
+              <td><h4>[[team.score]]</h4></td>
+            </tr>
+            
+          </template>
+        </table>
+      </paper-material>
+    </template> -->
+    <template is="dom-if" if="[[detailsActive]]">
+      <paper-material elevation="1" class="center">
+        <h2>Team: [[_getAttrFromObj(routeData.id, 'name', participants)]]</h2>
+        <div></div>
+        <h2 class="center margin-bottom">Scorecard</h2>
+        <table class="center scorecard">
+          <tr>
+            <th></th>
+            <th>Game</th>
+            <th>Score</th>
+            <th>Rank</th>
+          </tr>
+          <template is="dom-repeat" items="[[scoresArray]]" as="score">
+            <tr class="hover">
+              <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td>
+              <td>[[_getAttrFromObj(score.g_id, 'title', games)]]</td>
+              <td>[[_parseScore(games, score.g_id, score.value)]]</td>
+              <td>[[score.rank]]</td>
+            </tr>
+          </template>
+        </table>
+
+        <h2 class="center margin-bottom">Schedule</h2>
+        <table>
+          <tr>
+            <th></th>
+            <th>Block</th>
+            <th>Game</th>
+            <th>Host</th>
+            <th>Location</th>
+          </tr>
+          <template is="dom-repeat" items="[[scheduleArray]]" as="s">
+            <tr class="hover">
+              <td><paper-icon-button icon="icons:assessment"></paper-icon-button></td>
+              <td>[[s.block]]</td>
+              <td>[[_getAttrFromObj(s.g_id, 'title', games)]]</td>
+              <td>[[_getAttrFromObj(s.g_id, 'host', games)]]</td>
+
+              <td>[[_getAttrFromObj(s.g_id, 'location', games)]]</td>
+
+            </tr>
+          </template>
+        </table>
+      </paper-material>
+    </template>
+    
+  </template>
+  <script>
+    Polymer({
+      is: 'team-page',
+      properties: {
+        detailsActive: {
+          type: Boolean
+        },
+        route: {
+          type: Object,
+          notify: true
+        },
+        routeData: {
+          type: Object
+        },
+        participants: {
+          type: Object
+        },
+        participantsArray: {
+          type: Array
+        },
+        scores: {
+          type: Object
+        },
+        games: {
+          type: Object
+        },
+        schedule: {
+          type: Object
+        },
+        scheduleArray: {
+          type: Array,
+          computed: '_scheduleArray(schedule, routeData.id)'
+        },
+        scoresArray: {
+          type: Array,
+          computed: '_computeScoresArray(scores, routeData.id)'
+        }
+      },
+      _objToArr: function(obj) {
+        if(obj)
+          return Object.keys(obj).map(function (key) { return obj[key]; });
+        return [];
+      },
+      _getAttrFromObj: function(key, attr, obj) {
+        if(obj && key && obj[key] && obj[key][attr]) {
+          return obj[key][attr];
+        }
+        return "error";
+      },
+      _computeScoresArray: function(s, id) {
+        var arr = [];
+
+        if(s && id !== undefined) {
+          for(var k in s) {
+            if(!s.hasOwnProperty(k)) continue;
+            
+            for(var kk in s[k]) {
+              if(!s[k].hasOwnProperty(kk)) continue;
+
+              if(s[k][kk].p_id == id)
+                arr.push(s[k][kk]);
+            }
+          }
+        }
+        console.log(arr);
+        return arr;
+      },
+      _parseScore: function(g, id, s) {
+        if(g[id].score_type == 1) {
+          return s;
+        } else if(g[id].score_type == 2) {
+          return s + ' parse time';
+        }
+        return s;
+      },
+      _goGame: function(e) {
+        var id = e.model.get('score.g_id');
+        if(id !== undefined) {
+          this.set('route.path', '/games/' + id);
+        }
+      },
+      _scheduleArray: function(s, id) {
+        console.log("Yo");
+        var arr = [];
+        if(s && id !== undefined) {
+          for(var k in s) {
+            if(!s.hasOwnProperty(k)) continue;
+            for(var x = 0; x < s[k].length; x++) {
+              if(s[k][x].p_id == id) {
+                arr.push(s[k][x]);
+              }
+            }
+            
+          }
+          console.log(arr);
+        }
+        return arr;
+      }
+    });
+  </script>
+</dom-module>

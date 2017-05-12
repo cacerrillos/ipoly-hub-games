@@ -4,6 +4,7 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/app-route/app-route.html">
 
+<link rel="import" href="hub-styles.html">
 <!--
 A comment describing this element
 
@@ -22,111 +23,65 @@ Example:
 
 <dom-module id="games-page">
   <template>
-    <style include="iron-flex iron-flex-alignment">
+    <style include="iron-flex iron-flex-alignment hub-styles">
       :host {
         display: block;
       }
-      .container {
-        margin: 10px;
-      }
-      .content {
-        padding: 16px;
-        padding-left: 4px;
-        padding-right: 4px;
-        max-width: 720px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .center {
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
-        text-align: center;
-      }
-      .vcenter {
-        margin-top: auto;
-        margin-bottom: auto;
-      }
-      .row {
-        height: 2em;
-      }
-      .row > h4 {
-        padding-right: 8px;
-      }
-      h1, h2, h3, h4 {
-        margin: 0;
-      }
       paper-material {
-        background-color: white;
-        padding: 16px;
-        margin-bottom: 16px;
+        width: 440px;
+        margin-left: auto;
+        margin-right: auto;
       }
-      td {
-        padding-top: 4px;
-        padding-bottom: 4px;
-      }
-      .rightalign {
-        text-align: right;
-        padding-right: 4px;
+      .details {
+        width: 350px;
       }
     </style>
     <app-route route="{{route}}" pattern="/games/:id" data="{{routeData}}" active="{{editActive}}"></app-route>
 
     <template is="dom-if" if="[[!editActive]]">
       <paper-material elevation="1">
-        <!-- <paper-spinner active></paper-spinner> -->
-        <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
-          <h3>Host</h3>
-          <div class="flex"></div>
-          <h3>Game</h3>
-          <div class="flex"></div>
-          <h3>Location</h3>
-        </div>
-        <template is="dom-repeat" items="[[gamesArray]]" as="game">
-          <div class="layout horizontal row">
-            <div class="layout vertical">
-              <div class="flex"></div>
-              <paper-icon-button icon="icons:assignment" on-tap="_edit"></paper-icon-button>
-              <div class="flex"></div>
-            </div>
+        <table>
+          <tr>
+            <th></th>
+            <th><b>Game</b></th>
+            <th><b>Host</b></th>
+            <th><b>Location</b></th>
+          </tr>
+          <template is="dom-repeat" items="[[gamesArray]]" as="game">
+            <tr class="hover">
+              <td class="rightalign">
+                <paper-icon-button icon="icons:assessment" on-tap="_edit"></paper-icon-button>
+              </td>
+              
+              <td>[[game.title]]</td>
+              <td>[[game.host]]</td>
+              <td>[[game.location]]</td>
+            </tr>
             
-            <h4 class="vcenter">[[game.host]]</h4>
-            <div class="flex"></div>
-            <h4 class="vcenter">[[game.title]]</h4>
-            <div class="flex"></div>
-            <h4 class="vcenter">[[game.location]]</h4>
-          </div>
-          
-        </template>
+          </template>
+        </table>
       </paper-material>
     </template>
     <template is="dom-if" if="[[editActive]]">
-      <paper-material elevation="1">
+      <paper-material elevation="1" class="details">
         <h2>[[_getAttrFromObj(routeData.id, 'host', games)]] - [[_getAttrFromObj(routeData.id, 'title', games)]]</h2>
         <!-- <paper-spinner active></paper-spinner> -->
-        <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
-          <h3>Rank</h3>
-          <div class="flex"></div>
-          <h3>Team</h3>
-          <div class="flex"></div>
-          <h3>Score</h3>
-        </div>
-        <template is="dom-repeat" items="[[scoreDetails]]" as="result">
-          <div class="layout horizontal row">
-            <h4 class="vcenter">[[result.rank]]</h4>
-            <div class="flex"></div>
-
-            <div class="layout vertical">
-              <div class="flex"></div>
-              <paper-icon-button icon="icons:assignment" on-tap="_goTeam"></paper-icon-button>
-              <div class="flex"></div>
-            </div>
-            <h4 class="vcenter">[[_getAttrFromObj(result.p_id, 'name', participants)]]</h4>
-            <div class="flex"></div>
-
-            <h4 class="vcenter">[[_parseScore(result.score_type, result.value)]]</h4>
-          </div>
+        <table>
+          <tr>
+            <th></th>
+            <th><b>Rank</b></th>
+            <th><b>Team</b></th>
+            <th><b>Score</b></th>
+          </tr>
+          <template is="dom-repeat" items="[[scoreDetails]]" as="result">
+            <tr class="hover">
+              <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
+              <td>[[result.rank]]</td>
+              <td>[[_getAttrFromObj(result.p_id, 'name', participants)]]</td>
+              <td>[[_parseScore(result.score_type, result.value)]]</td>
+            </tr>
         </template>
+        </table>
       </paper-material>
     </template>
     
@@ -177,15 +132,15 @@ Example:
         }
         return "error";
       },
-      _getScores: function(games, e, id) {
+      _getScores: function(games, scores, id) {
         console.log(games);
-        console.log(e);
+        console.log(scores);
         console.log(id);
         var s = [];
-        if(games && e && id != undefined && e[id] && games[id]) {
-          console.log(e[id]);
+        if(games && scores && id != undefined && scores[id] && games[id]) {
+          console.log(scores[id]);
           console.log(games[id]);
-          s = this._objToArr(e[id]);
+          s = this._objToArr(scores[id]);
           console.log(s);
           var g = games[id];
           if(g.score_type == 1 || g.score_type == 2) { //absolute or timed scoring

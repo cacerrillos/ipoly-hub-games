@@ -1,0 +1,214 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="hub-styles.html">
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+
+<dom-module id="leaderboard-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment hub-styles">
+      :host {
+        display: block;
+      }
+      paper-material {
+        width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+    <paper-material elevation="1" class="leaderboard" name="leaderboard">
+      <h3 class="center margin-bottom">Leaderboard</h3>
+
+      <!-- <paper-spinner active></paper-spinner> -->
+      <table class="leaderboard" border="0">
+        <tr>
+          <th></th>
+          <th><b>Rank</b></th>
+          <th><b>Team</b></th>
+          <th><b>Score</h3></th>
+        </tr>
+        <template is="dom-repeat" items="[[leaderboard]]" as="team">
+          <tr class="hover">
+            <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
+            <td>[[team.rank]]</td>
+            <td>[[team.team]]</td>
+            <td>[[team.scoreString]]</td>
+          </tr>
+          
+        </template>
+      </table>
+    </paper-material>
+  </template>
+  <script>
+    Polymer({
+      is: 'leaderboard-page',
+      properties: {
+        leaderboard: {
+          type: Array,
+          computed: '_computeLeaderboard(totals)'
+        },
+        participants: {
+          type: Object
+        },
+        games: {
+          type: Object
+        },
+        scores: {
+          type: Object
+        },
+        sortedScores: {
+          type: Object,
+          computed: '_sortedScores(games, scores)',
+          notify: true
+        },
+        totals: {
+          type: Object,
+          computed: '_computeTotals(participants, sortedScores)'
+        },
+        route: {
+          type: Object,
+          notify: true
+        }
+      },
+      _objToArr: function(obj) {
+        if(obj)
+          return Object.keys(obj).map(function (key) { return obj[key]; });
+        return [];
+      },
+      _getAttrFromObj: function(key, attr, obj) {
+        if(obj && key && obj[key] && obj[key][attr]) {
+          return obj[key][attr];
+        }
+        return "error";
+      },
+      _computeLeaderboard: function(p) {
+        var p_a = this._objToArr(p);
+        // p_a[6].total = 50;
+        // p_a[7].total = 44;
+        // p_a[8].total = 44;
+
+        
+        p_a.sort(function(a, b) {
+          if(a.total == b.total)
+            return 0;
+          return a.total > b.total ? -1 : 1;
+        });
+
+        var arr = [];
+        var rank = 0;
+        if(p) {
+          for(var k in p_a) {
+            if(!p_a.hasOwnProperty(k)) continue;
+
+            if(arr.length == 0 || arr[arr.length - 1].score != p_a[k].total)
+              rank++;
+
+            arr.push({
+              'rank': rank,
+              'team': this._getAttrFromObj(p_a[k].id, 'name', this.participants),
+              'id': p_a[k].id,
+              'score': p_a[k].total,
+              'scoreString': p_a[k].total.toFixed(2)
+            });
+
+          }
+        }
+        return arr;
+      },
+      _sortedScores: function(games, scores) {
+        console.log(g);
+        console.log(s);
+
+        var s = {};
+        if(games && scores) {
+          for(var k in games) {
+            if(!games.hasOwnProperty(k)) continue;
+            var g = games[k];
+
+            s[g.id] = this._objToArr(scores[g.id]);
+
+            if(g.score_type == 1 || g.score_type == 2) { //absolute or timed scoring
+              s[g.id].sort(function(a, b) {
+                if(a.value == b.value)
+                  return 0;
+                return a.value < b.value ? g.direction : g.direction * -1;
+              });
+            }
+
+          }
+        }
+        for(var k in s) {
+          if(!s.hasOwnProperty(k)) continue;
+
+          if(s[k].length > 0) {
+            s[k][0].rank = 1;
+            s[k][0].score_type = games[k].score_type;
+          }
+
+          for(var x = 1; x < s[k].length; x++) {
+            s[k][x].rank = s[k][x - 1].rank + (s[k][x - 1].value != s[k][x].value ? 1 : 0);
+            s[k][x].score_type = games[k].score_type;
+          }
+
+        }
+        
+        console.log(s);
+        return s;
+      },
+      _computeTotals: function(p, s) {
+        console.log(p);
+        console.log(s);
+        var a = {};
+        for(var k in p) {
+          if(!p.hasOwnProperty(k)) continue;
+          var total = 0;
+
+          for(var kk in s) {
+            if(!s.hasOwnProperty(kk)) continue;
+
+            for(var x in s[kk]) {
+              if(!s[kk].hasOwnProperty(x)) continue;
+
+              if(s[kk][x].p_id == p[k].id) {
+                var t_p = s[kk].length ;
+                var rank_s = s[kk][x].rank - 1;
+                total += (t_p - rank_s) / t_p * 10.0;
+              }
+            }
+          }
+
+          a[p[k].id] = {
+            'id': p[k].id,
+            'total': total
+          };
+        }
+
+        return a;
+      },
+      _goTeam: function(e) {
+        console.log("yo");
+        console.log(e.model);
+        var id = e.model.get('team.id');
+        if(id !== undefined) {
+          this.set('route.path', '/teams/' + id);
+        }
+      }
+    });
+  </script>
+</dom-module>
