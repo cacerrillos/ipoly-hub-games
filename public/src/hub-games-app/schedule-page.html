@@ -1,0 +1,142 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+
+<dom-module id="schedule-page">
+  <template>
+    <style include="iron-flex iron-flex-alignment hub-styles">
+      :host {
+        display: block;
+      }
+      .cont {
+        max-width: 500px;
+      }
+    </style>
+    <div class="cont center">
+      <div class="layout horizontal">
+        <paper-icon-button icon="icons:arrow-back" on-tap="_back"></paper-icon-button>
+        <div class="flex"></div>
+        <paper-icon-button icon="icons:arrow-forward" on-tap="_forward"></paper-icon-button>
+      </div>
+
+      <iron-pages selected="[[currentBlock]]" attr-for-selected="data-block">
+        <template is="dom-repeat" items="[[blocks]]" as="block">
+          <paper-material elevation="1" data-block$="[[block]]">
+            <h3>Block [[block]]</h3>
+            <table>
+              <tr>
+                <th></th>
+                <th>Team</th>
+                <th></th>
+                <th>Game</th>
+                <th>Location</th>
+              </tr>
+              <template is="dom-repeat" items="[[_filterSchedule(schedule, block)]]" as="s">
+                <tr class="hover">
+                  <td><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
+                  <td>[[_getAttrFromObj(s.p_id, 'name', participants)]]</td>
+                  <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td>
+                  <td>[[_getAttrFromObj(s.g_id, 'title', games)]]</td>
+                  <td>[[_getAttrFromObj(s.g_id, 'location', games)]]</td>
+                </tr>
+              </template>
+            </table>
+          </paper-material>
+        </template>
+      </iron-pages>
+      </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'schedule-page',
+      properties: {
+        schedule: {
+          type: Object
+        },
+        blocks: {
+          type: Array,
+          computed: '_blocks(schedule)'
+        },
+        currentBlockIndex: {
+          type: Number,
+          value: 0
+        },
+        /* todo auto change block based on time */
+        currentBlock: {
+          type: String,
+          computed: '_currentBlock(blocks, currentBlockIndex)'
+        },
+        route: {
+          type: Object,
+          notify: true
+        }
+      },
+      _objToArr: function(obj) {
+        if(obj)
+          return Object.keys(obj).map(function (key) { return obj[key]; });
+        return [];
+      },
+      _blocks: function(e) {
+        if(e)
+          return Object.keys(e);
+        return [];
+      },
+      _getAttrFromObj: function(key, attr, obj) {
+        if(obj && key && obj[key] && obj[key][attr]) {
+          return obj[key][attr];
+        }
+        return "error";
+      },
+      _currentBlock: function(e, index) {
+        if(e && index !== undefined && e[index]) {
+          return e[index];
+        }
+        return '';
+      },
+      _filterSchedule: function(schedule, block) {
+        if(schedule && block && schedule[block]) {
+          return schedule[block];
+        }
+        return [];
+      },
+      _back: function(e) {
+        //if()
+        if(this.currentBlockIndex > 0)
+          this.currentBlockIndex--;
+      },
+      _forward: function(e) {
+        if(this.currentBlockIndex < this.blocks.length - 1)
+          this.currentBlockIndex++;
+      },
+      _goTeam: function(e) {
+        console.log(e.model.get('s.p_id'));
+        var id = e.model.get('s.p_id');
+        if(id !== undefined) {
+          this.set('route.path', '/teams/' + id);
+        }
+      },
+      _goGame: function(e) {
+        var id = e.model.get('s.g_id');
+        if(id !== undefined) {
+          this.set('route.path', '/games/' + id);
+        }
+      }
+    });
+  </script>
+</dom-module>

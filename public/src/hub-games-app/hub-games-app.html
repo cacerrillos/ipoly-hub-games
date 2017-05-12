@@ -20,7 +20,7 @@
 <link rel="import" href="games-page.html">
 <link rel="import" href="team-page.html">
 <link rel="import" href="leaderboard-page.html">
-
+<link rel="import" href="schedule-page.html">
 <link rel="import" href="hub-styles.html">
 
 
@@ -84,38 +84,13 @@
                 participants="[[participants]]"
                 route="{{route}}"
                 ></leaderboard-page>
-              <section name="schedule">
-                <div class="layout horizontal">
-                  <paper-icon-button icon="icons:arrow-back" on-tap="_back"></paper-icon-button>
-                  <div class="flex"></div>
-                  <paper-icon-button icon="icons:arrow-forward" on-tap="_forward"></paper-icon-button>
-                </div>
-                <iron-pages selected="[[currentBlock]]" attr-for-selected="data-block">
-                  <template is="dom-repeat" items="[[blocks]]" as="block">
-                    <paper-material elevation="1" data-block$="[[block]]">
-                      <h3>Block [[block]]</h3>
-                      <div class="layout horizontal row" style="height: auto; padding-bottom: 8px">
-                        <h3>Team</h3>
-                        <div class="flex"></div>
-                        <h3>Game</h3>
-                        <div class="flex"></div>
-                        <h3>Location</h3>
-                      </div>
-                      <template is="dom-repeat" items="[[_filterSchedule(schedule, block)]]" as="schedule">
-                        <div class="layout horizontal row">
-                          <h4>[[_getAttrFromObj(schedule.p_id, 'name', participants)]]</h4>
-                          <div class="flex"></div>
-                          <h4>[[_getAttrFromObj(schedule.g_id, 'title', games)]]</h4>
-                          <div class="flex"></div>
-                          <h4>[[_getAttrFromObj(schedule.g_id, 'location', games)]]</h4>
-
-                        </div>
-
-                      </template>
-                    </paper-material>
-                  </template>
-                </iron-pages>
-              </section>
+              <schedule-page
+                name="schedule"
+                participants="[[participants]]"
+                games="[[games]]"
+                schedule="[[schedule]]"
+                route="{{route}}"
+                ></schedule-page>
               <games-page
                 name="games"
                 games="[[games]]"
@@ -180,24 +155,6 @@
         schedule: {
           type: Object
         },
-        scheduleArray: {
-          type: Array,
-          computed: '_scheduleArray(schedule)'
-        },
-        blocks: {
-          type: Array,
-          computed: '_blocks(schedule)'
-        },
-        currentBlockIndex: {
-          type: Number,
-          value: 0
-        },
-        /* todo auto change block based on time */
-        currentBlock: {
-          type: String,
-          computed: '_currentBlock(blocks, currentBlockIndex)'
-        },
-        
         scores: {
           type: Object
         }
@@ -235,35 +192,10 @@
         }
         return "error";
       },
-      _blocks: function(e) {
-        if(e)
-          return Object.keys(e);
-        return [];
-      },
-      _back: function(e) {
-        //if()
-        if(this.currentBlockIndex > 0)
-          this.currentBlockIndex--;
-      },
-      _forward: function(e) {
-        if(this.currentBlockIndex < this.blocks.length - 1)
-          this.currentBlockIndex++;
-      },
-      _currentBlock: function(e, index) {
-        if(e && index !== undefined && e[index]) {
-          return e[index];
-        }
-        return '';
-      },
-      _scheduleArray: function(obj) {
-        console.log(obj);
-      },
-      _filterSchedule: function(schedule, block) {
-        if(schedule && block && schedule[block]) {
-          return schedule[block];
-        }
-        return [];
-      },
+      
+      
+      
+      
       ready: function(e) {
         if(this.routeData) {
           if(this.routeData.page == undefined || this.routeData.page == '') {
