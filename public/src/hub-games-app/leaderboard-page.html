@@ -130,9 +130,6 @@ Example:
         return arr;
       },
       _sortedScores: function(games, scores) {
-        console.log(g);
-        console.log(s);
-
         var s = {};
         if(games && scores) {
           for(var k in games) {
@@ -166,12 +163,9 @@ Example:
 
         }
         
-        console.log(s);
         return s;
       },
       _computeTotals: function(p, s) {
-        console.log(p);
-        console.log(s);
         var a = {};
         for(var k in p) {
           if(!p.hasOwnProperty(k)) continue;
@@ -200,8 +194,6 @@ Example:
         return a;
       },
       _goTeam: function(e) {
-        console.log("yo");
-        console.log(e.model);
         var id = e.model.get('team.id');
         if(id !== undefined) {
           this.set('route.path', '/teams/' + id);
