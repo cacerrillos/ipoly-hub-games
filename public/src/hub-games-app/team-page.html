@@ -55,47 +55,49 @@ Example:
     </template> -->
     <template is="dom-if" if="[[detailsActive]]">
       <paper-material elevation="1" class="center">
-        <h2>Team: [[_getAttrFromObj(routeData.id, 'name', participants)]]</h2>
-        <div></div>
-        <h2 class="center margin-bottom">Scorecard</h2>
-        <table class="center scorecard">
-          <tr>
-            <th></th>
-            <th>Game</th>
-            <th>Score</th>
-            <th>Rank</th>
-          </tr>
-          <template is="dom-repeat" items="[[scoresArray]]" as="score">
-            <tr class="hover">
-              <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td>
-              <td>[[_getAttrFromObj(score.g_id, 'title', games)]]</td>
-              <td>[[_parseScore(games, score.g_id, score.value)]]</td>
-              <td>[[score.rank]]</td>
+        <paper-spinner active hidden$="[[!loading]]"></paper-spinner>
+        <div hidden$="[[loading]]">
+          <h2>Team: [[_getAttrFromObj(routeData.id, 'name', participants)]]</h2>
+          <h2 class="center margin-bottom">Scorecard</h2>
+          <table class="center scorecard">
+            <tr>
+              <th></th>
+              <th>Game</th>
+              <th>Score</th>
+              <th>Rank</th>
             </tr>
-          </template>
-        </table>
+            <template is="dom-repeat" items="[[scoresArray]]" as="score">
+              <tr class="hover">
+                <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td>
+                <td>[[_getAttrFromObj(score.g_id, 'title', games)]]</td>
+                <td>[[_parseScore(games, score.g_id, score.value)]]</td>
+                <td>[[score.rank]]</td>
+              </tr>
+            </template>
+          </table>
 
-        <h2 class="center margin-bottom">Schedule</h2>
-        <table>
-          <tr>
-            <th></th>
-            <th>Block</th>
-            <th>Game</th>
-            <th>Host</th>
-            <th>Location</th>
-          </tr>
-          <template is="dom-repeat" items="[[scheduleArray]]" as="s">
-            <tr class="hover">
-              <td><paper-icon-button icon="icons:assessment"></paper-icon-button></td>
-              <td>[[s.block]]</td>
-              <td>[[_getAttrFromObj(s.g_id, 'title', games)]]</td>
-              <td>[[_getAttrFromObj(s.g_id, 'host', games)]]</td>
-
-              <td>[[_getAttrFromObj(s.g_id, 'location', games)]]</td>
-
+          <h2 class="center margin-bottom">Schedule</h2>
+          <table>
+            <tr>
+              <th></th>
+              <th>Block</th>
+              <th>Game</th>
+              <th>Host</th>
+              <th>Location</th>
             </tr>
-          </template>
-        </table>
+            <template is="dom-repeat" items="[[scheduleArray]]" as="s">
+              <tr class="hover">
+                <td><paper-icon-button icon="icons:assessment"></paper-icon-button></td>
+                <td>[[s.block]]</td>
+                <td>[[_getAttrFromObj(s.g_id, 'title', games)]]</td>
+                <td>[[_getAttrFromObj(s.g_id, 'host', games)]]</td>
+
+                <td>[[_getAttrFromObj(s.g_id, 'location', games)]]</td>
+
+              </tr>
+            </template>
+          </table>
+        </div>
       </paper-material>
     </template>
     
@@ -104,6 +106,11 @@ Example:
     Polymer({
       is: 'team-page',
       properties: {
+        loading: { 
+          type: Boolean,
+          value: true,
+          computed: '_loading(games, scores, participants, schedule)'
+        },
         detailsActive: {
           type: Boolean
         },
@@ -137,6 +144,9 @@ Example:
           type: Array,
           computed: '_computeScoresArray(scores, routeData.id)'
         }
+      },
+      _loading: function(a, b, c, d) {
+        return !(a && b && c && d);
       },
       _objToArr: function(obj) {
         if(obj)

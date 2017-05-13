@@ -34,8 +34,10 @@ Example:
         <div class="flex"></div>
         <paper-icon-button icon="icons:arrow-forward" on-tap="_forward"></paper-icon-button>
       </div>
-
-      <iron-pages selected="[[currentBlock]]" attr-for-selected="data-block">
+      <paper-material elevation="1" hidden$="[[!loading]]" class="center">
+        <paper-spinner active></paper-spinner>
+      </paper-material>
+      <iron-pages selected="[[currentBlock]]" attr-for-selected="data-block" hidden$="[[loading]]">
         <template is="dom-repeat" items="[[blocks]]" as="block">
           <paper-material elevation="1" data-block$="[[block]]">
             <h3>Block [[block]]</h3>
@@ -66,6 +68,11 @@ Example:
     Polymer({
       is: 'schedule-page',
       properties: {
+        loading: {
+          type: Boolean,
+          value: true,
+          computed: '_loading(schedule, games, participants)'
+        },
         schedule: {
           type: Object
         },
@@ -86,6 +93,9 @@ Example:
           type: Object,
           notify: true
         }
+      },
+      _loading: function(a, b, c) {
+        return !(a && b && c);
       },
       _objToArr: function(obj) {
         if(obj)

@@ -31,32 +31,40 @@ Example:
       }
     </style>
     <paper-material elevation="1" class="leaderboard center" name="leaderboard">
-      <h3 class="center margin-bottom">Leaderboard</h3>
+      <paper-spinner active hidden$="[[!loading]]"></paper-spinner>
+      <div hidden$="[[loading]]">
+        <h3 class="center margin-bottom">Leaderboard</h3>
 
-      <!-- <paper-spinner active></paper-spinner> -->
-      <table class="leaderboard" border="0">
-        <tr>
-          <th></th>
-          <th><b>Rank</b></th>
-          <th><b>Team</b></th>
-          <th><b>Score</h3></th>
-        </tr>
-        <template is="dom-repeat" items="[[leaderboard]]" as="team">
-          <tr class="hover">
-            <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
-            <td>[[team.rank]]</td>
-            <td>[[team.team]]</td>
-            <td>[[team.scoreString]]</td>
+        <!-- <paper-spinner active></paper-spinner> -->
+        <table class="leaderboard" border="0">
+          <tr>
+            <th></th>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Score</th>
           </tr>
-          
-        </template>
-      </table>
+          <template is="dom-repeat" items="[[leaderboard]]" as="team">
+            <tr class="hover">
+              <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
+              <td>[[team.rank]]</td>
+              <td>[[team.team]]</td>
+              <td>[[team.scoreString]]</td>
+            </tr>
+            
+          </template>
+        </table>
+      </div>
     </paper-material>
   </template>
   <script>
     Polymer({
       is: 'leaderboard-page',
       properties: {
+        loading: {
+          type: Boolean,
+          value: true,
+          computed: '_loading(participants, games, scores)'
+        },
         leaderboard: {
           type: Array,
           computed: '_computeLeaderboard(totals)'
@@ -83,6 +91,9 @@ Example:
           type: Object,
           notify: true
         }
+      },
+      _loading: function(a, b, c) {
+        return !(a && b && c);
       },
       _objToArr: function(obj) {
         if(obj)
