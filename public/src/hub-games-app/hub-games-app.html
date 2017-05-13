@@ -41,27 +41,28 @@
       id="participantsAjax"
       url="[[_computeAPI('/participants')]]"
       handle-as="json"
-      on-response="handleResponse"
+      on-error="_error"
       last-response="{{participants}}"></iron-ajax>
     <iron-ajax
       auto
       id="gamesAjax"
       url="[[_computeAPI('/games')]]"
       handle-as="json"
-      on-response="handleResponse"
+      on-error="_error"
       last-response="{{games}}"></iron-ajax>
     <iron-ajax
       auto
       id="scheduleAjax"
       url="[[_computeAPI('/schedule')]]"
       handle-as="json"
-      on-response="handleResponse"
+      on-error="_error"
       last-response="{{schedule}}"></iron-ajax>
     <iron-ajax
       auto
       id="scoresAjax"
       url="[[_computeAPI('/scores')]]"
       handle-as="json"
+      on-error="_error"
       last-response="{{scores}}"></iron-ajax>
 
 
@@ -208,6 +209,18 @@
             window.location.href = '#/leaderboard';
           }
         }
+        setTimeout(this._autoReload.bind(this), 15000);
+      },
+      _autoReload: function() {
+        this.$.gamesAjax.generateRequest();
+        this.$.scoresAjax.generateRequest();
+        setTimeout(this._autoReload.bind(this), 15000);
+      },
+      _error: function(e) {
+        console.log(e);
+        setTimeout(function() {
+          e.target.generateRequest();
+        }, 500);
       },
       _handleSetTitle: function(e) {
         if(e && e.detail && e.detail.title) {
