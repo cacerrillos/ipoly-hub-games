@@ -78,7 +78,8 @@ Example:
 
     <template is="dom-if" if="[[!editActive]]">
       <paper-material elevation="1" class="center">
-        <table>
+      <paper-spinner active hidden$="[[!loading]]"></paper-spinner>
+        <table hidden$="[[loading]]">
           <tr>
             <th></th>
             <th><b>Game</b></th>
@@ -102,29 +103,32 @@ Example:
     </template>
     <template is="dom-if" if="[[editActive]]">
       <paper-material elevation="1" class="details center">
-        <h2>[[_getAttrFromObj(routeData.id, 'host', games)]] - [[_getAttrFromObj(routeData.id, 'title', games)]]</h2>
-        <!-- <paper-spinner active></paper-spinner> -->
-        <table>
-          <tr>
-            <th></th>
-            <th><b>Rank</b></th>
-            <th><b>Team</b></th>
-            <th><b>Score</b></th>
-            <th hidden="[[!isAdmin]]"></th>
-          </tr>
-          <template is="dom-repeat" items="[[scoreDetails]]" as="result">
-            <tr class="hover">
-              <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
-              <td>[[result.rank]]</td>
-              <td>[[_getAttrFromObj(result.p_id, 'name', participants)]]</td>
-              <td>[[_parseScore(result.score_type, result.value)]]</td>
-              <td hidden="[[!isAdmin]]">
-                <paper-icon-button icon="icons:create" on-tap="_editScoreDialog"></paper-icon-button>
-                <paper-icon-button icon="icons:delete" on-tap="_deleteAjax"></paper-icon-button>
-              </td>
+        <paper-spinner active hidden$="[[!loadingDetails]]"></paper-spinner>
+        <div hidden$="[[loadingDetails]]">
+          <h2>[[_getAttrFromObj(routeData.id, 'host', games)]] - [[_getAttrFromObj(routeData.id, 'title', games)]]</h2>
+          <!-- <paper-spinner active></paper-spinner> -->
+          <table>
+            <tr>
+              <th></th>
+              <th><b>Rank</b></th>
+              <th><b>Team</b></th>
+              <th><b>Score</b></th>
+              <th hidden$="[[!isAdmin]]"></th>
             </tr>
-        </template>
-        </table>
+            <template is="dom-repeat" items="[[scoreDetails]]" as="result">
+              <tr class="hover">
+                <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
+                <td>[[result.rank]]</td>
+                <td>[[_getAttrFromObj(result.p_id, 'name', participants)]]</td>
+                <td>[[_parseScore(result.score_type, result.value)]]</td>
+                <td hidden$="[[!isAdmin]]">
+                  <paper-icon-button icon="icons:create" on-tap="_editScoreDialog"></paper-icon-button>
+                  <paper-icon-button icon="icons:delete" on-tap="_deleteAjax"></paper-icon-button>
+                </td>
+              </tr>
+          </template>
+          </table>
+        </div>
       </paper-material>
 
       <paper-fab class="edit-fab" icon="icons:create" on-tap="_editDialog"></paper-fab>
@@ -182,9 +186,9 @@ Example:
               </template>
             </paper-listbox>
           </paper-dropdown-menu>
-          <paper-input id="s" label="Score" hidden="[[!absolute]]" type="number" value="{{score::input}}"></paper-input>
+          <paper-input id="s" label="Score" hidden$="[[!absolute]]" type="number" value="{{score::input}}"></paper-input>
           
-          <div class="layout horizontal" hidden="[[!timed]]">
+          <div class="layout horizontal" hidden$="[[!timed]]">
             <paper-input id="m" label="Min" class="time" min="0" size="3" type="number" value="{{min::input}}"></paper-input>
             <div class="flex"></div>            
             <paper-input id="s" label="Sec" class="time" min="0" max="59" size="3" type="number" value="{{sec::input}}"></paper-input>
@@ -207,6 +211,16 @@ Example:
     Polymer({
       is: 'games-page',
       properties: {
+        loading: {
+          type: Boolean,
+          value: true,
+          computed: '_loading(games)'
+        },
+        loadingDetails: {
+          type: Boolean,
+          value: true,
+          computed: '_loadingDetails(games, participants, scores)'
+        },
         route: {
           type: Object,
           notify: true
@@ -290,6 +304,12 @@ Example:
       observers: [
         '_scoreType(games, routeData.id)'
       ],
+      _loading: function(a) {
+        return !a;
+      },
+      _loadingDetails: function(a, b, c) {
+        return !(a && b && c);
+      },
       _headers: function(adminCode) {
         if(adminCode) {
           return {
