@@ -179,16 +179,12 @@
         this.$.scheduleAjax.generateRequest();
       },
       _computeAPI: function (path) {
-        // switch(path) {
-        //   default:
-        //     break;
-        //   case '/games':
-        //     return this.resolveUrl('../../games.json');
-        //   case '/schedule':
-        //     return this.resolveUrl('../../schedule.json');
-        //   case '/participants':
-        //     return this.resolveUrl('../../participants.json');
-        // }
+        switch(path) {
+          case '/schedule':
+            return this.resolveUrl('../../schedule.json');
+          case '/participants':
+            return this.resolveUrl('../../participants.json');
+        }
         var apiRootPath = 'https://zerx6mo164.execute-api.us-east-2.amazonaws.com/v1';
         return apiRootPath + path;
       },
