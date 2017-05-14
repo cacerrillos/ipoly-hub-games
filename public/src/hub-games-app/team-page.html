@@ -178,6 +178,8 @@ Example:
         return arr;
       },
       _parseTime: function(e) {
+        if(!e && e !== 0)
+          return 'Error.';
         var m = Math.floor(e / (60 * 100));
         var s = Math.floor((e / 100) % 60);
         var h = e % 100;
@@ -191,7 +193,7 @@ Example:
         if(g[id].score_type == 1) {
           return s;
         } else if(g[id].score_type == 2) {
-          return this._parseTime(score);
+          return this._parseTime(s);
         }
         return s;
       },
