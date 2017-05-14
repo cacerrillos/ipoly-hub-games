@@ -271,8 +271,7 @@ Example:
         },
         adminCode: {
           type: String,
-          value: '',
-          observer: '_log'
+          value: ''
         },
         absolute: {
           type: Boolean,
@@ -473,7 +472,6 @@ Example:
           'score_type': this.scoreType,
           'direction': this.direction,
         };
-        console.log(o);
         this.$.editAjax.body = JSON.stringify(o);
         this.$.editAjax.generateRequest();
         this.$.storage.saveValue('admincode');
@@ -495,7 +493,6 @@ Example:
           'p_id': this.submitTeam,
           'value': value
         };
-        console.log(o);
         this.$.scoresAjax.body = JSON.stringify(o);
         this.$.scoresAjax.generateRequest();
         this.$.storage.saveValue('admincode');
@@ -503,7 +500,6 @@ Example:
       },
       _response: function(e) {
         this._reset();
-        console.log(e);
         this._saveButtons(false);
         this.$.submitDialog.close();
         this.fire('reload-data');
@@ -511,7 +507,6 @@ Example:
         this.$.toast.show();
       },
       _editResponse: function(e) {
-        console.log(e);
         this._saveButtons(false);
         this.$.editDialog.close();
         this.fire('reload-data');
@@ -525,11 +520,9 @@ Example:
         console.log(e);
       },
       _request: function(e) {
-        console.log(e);
         this._saveButtons(true);
       },
       _error: function(e) {
-        console.log(e);
         this._saveButtons(false);
         this.$.toast.text = "An error occurred!";
         if(e.detail.request.status != 400) {
