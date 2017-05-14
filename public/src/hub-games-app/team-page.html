@@ -71,7 +71,7 @@ Example:
                 <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td>
                 <td>[[_getAttrFromObj(score.g_id, 'title', games)]]</td>
                 <td>[[_parseScore(games, score.g_id, score.value)]]</td>
-                <td>[[score.rank]]</td>
+                <td>[[_getRank(ranks, routeData.id, score.g_id)]]</td>
               </tr>
             </template>
           </table>
@@ -143,6 +143,9 @@ Example:
         scoresArray: {
           type: Array,
           computed: '_computeScoresArray(scores, routeData.id)'
+        },
+        ranks: {
+          type: Object
         }
       },
       _loading: function(a, b, c, d) {
@@ -219,6 +222,14 @@ Example:
           console.log(arr);
         }
         return arr;
+      },
+      _getRank: function(a, b, c) {
+        if(a && b !== undefined && c !== undefined) {
+          if(a[b] && a[b][c] !== undefined) {
+            return a[b][c];
+          }
+        }
+        return "Error.";
       }
     });
   </script>

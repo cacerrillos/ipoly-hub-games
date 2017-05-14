@@ -113,6 +113,7 @@
                 games="[[games]]"
                 schedule="[[schedule]]"
                 route="{{route}}"
+                ranks="[[ranks]]"
                 ></team-page>
             </iron-pages>
             
@@ -163,6 +164,10 @@
         },
         scores: {
           type: Object
+        },
+        ranks: {
+          type: Object,
+          computed: '_computeRanks(games, scores)'
         }
       },
       observers: [
@@ -270,7 +275,46 @@
         this.$.backButton.hidden = true;
         this.$.menuButton.hidden = false;
         window.history.back();
-      }
+      },
+      _computeRanks: function(games, scores) {
+        var ranks = {};
+        //ranks[p_id][g_id] = NUMBER;
+
+        if(games && scores) {
+          for(var k in games) {
+            if(!games.hasOwnProperty(k)) continue;
+
+            var g = games[k];
+            var s = this._objToArr(scores[g.id]);
+
+            if(g.score_type == 1 || g.score_type == 2) { //absolute or timed scoring
+              s.sort(function(a, b) {
+                if(a.value == b.value)
+                  return 0;
+                return a.value < b.value ? g.direction : g.direction * -1;
+              });
+            }
+            if(s.length > 0) {
+              s[0].rank = 1;
+              s[0].score_type = g.score_type;
+            }
+
+            for(var x = 1; x < s.length; x++) {
+              s[x].rank = s[x - 1].rank + (s[x - 1].value != s[x].value ? 1 : 0);
+              s[x].score_type = g.score_type;
+            }
+
+            for(var x = 0; x < s.length; x++) {
+              if(!ranks[s[x].p_id])
+                ranks[s[x].p_id] = {};
+
+              ranks[s[x].p_id][s[x].g_id] = s[x].rank;
+            }
+          }
+        }
+        
+        return ranks;
+      },
     });
   </script>
 </dom-module>
