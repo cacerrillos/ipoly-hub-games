@@ -535,7 +535,7 @@ Example:
         if(e.detail.request.status != 400) {
           if(e.detail.request.response) {
             var details = e.detail.request.response.details;
-            if(details.includes('Duplicate')) {
+            if(details && details.includes('Duplicate')) {
               this.$.toast.text = "Team already scored.";
             }
           }
