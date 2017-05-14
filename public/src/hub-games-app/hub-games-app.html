@@ -191,7 +191,8 @@
           case '/participants':
             return this.resolveUrl('../../participants.json');
         }
-        var apiRootPath = 'api/';
+        var apiRootPath = 'https://zerx6mo164.execute-api.us-east-2.amazonaws.com/v1';
+        //var apiRootPath = 'api';
         return apiRootPath + path;
       },
       _log: function(e) {

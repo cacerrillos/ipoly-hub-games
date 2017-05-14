@@ -145,7 +145,7 @@ Example:
     </template>
     <iron-ajax
       id="editAjax"
-      url="api/games"
+      url="../../api/games"
       method="PUT"
       headers="[[_headers(adminCode)]]"
       handle-as="json"
@@ -154,7 +154,7 @@ Example:
       on-response="_editResponse"></iron-ajax>
     <iron-ajax
       id="scoresAjax"
-      url="api/scores"
+      url="../../api/scores"
       headers="[[_headers(adminCode)]]"
       handle-as="json"
       on-request="_request"
