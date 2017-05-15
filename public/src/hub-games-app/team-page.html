@@ -61,14 +61,14 @@ Example:
           <h2 class="center margin-bottom">Scorecard</h2>
           <table class="center scorecard">
             <tr>
-              <th></th>
+              <!-- <th></th> -->
               <th>Game</th>
               <th>Score</th>
               <th>Rank</th>
             </tr>
             <template is="dom-repeat" items="[[scoresArray]]" as="score">
               <tr class="hover">
-                <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td>
+                <!-- <td><paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button></td> -->
                 <td>[[_getAttrFromObj(score.g_id, 'title', games)]]</td>
                 <td>[[_parseScore(games, score.g_id, score.value)]]</td>
                 <td>[[_getRank(ranks, routeData.id, score.g_id)]]</td>
@@ -79,7 +79,7 @@ Example:
           <h2 class="center margin-bottom">Schedule</h2>
           <table>
             <tr>
-              <th></th>
+              <!-- <th></th> -->
               <th>Block</th>
               <th>Game</th>
               <th>Host</th>
@@ -87,7 +87,7 @@ Example:
             </tr>
             <template is="dom-repeat" items="[[scheduleArray]]" as="s">
               <tr class="hover">
-                <td><paper-icon-button icon="icons:assessment"></paper-icon-button></td>
+                <!-- <td><paper-icon-button icon="icons:assessment"></paper-icon-button></td> -->
                 <td>[[s.block]]</td>
                 <td>[[_getAttrFromObj(s.g_id, 'title', games)]]</td>
                 <td>[[_getAttrFromObj(s.g_id, 'host', games)]]</td>
