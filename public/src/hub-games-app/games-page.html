@@ -98,7 +98,7 @@ Example:
           <template is="dom-repeat" items="[[gamesArray]]" as="game">
             <tr class="hover">
               <td class="rightalign">
-                <paper-icon-button icon="icons:assessment" on-tap="_goGame"></paper-icon-button>
+                <paper-icon-button icon="icons:assessment" on-tap="_goGame" class="mini"></paper-icon-button>
               </td>
               
               <td>[[game.title]]</td>
@@ -126,13 +126,13 @@ Example:
             </tr>
             <template is="dom-repeat" items="[[scoreDetails]]" as="result">
               <tr class="hover">
-                <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam"></paper-icon-button></td>
+                <td class="rightalign"><paper-icon-button icon="icons:info" on-tap="_goTeam" class="mini"></paper-icon-button></td>
                 <td>[[result.rank]]</td>
                 <td>[[_getAttrFromObj(result.p_id, 'name', participants)]]</td>
                 <td>[[_parseScore(result.score_type, result.value)]]</td>
                 <td hidden$="[[!isAdmin]]">
-                  <paper-icon-button icon="icons:create" on-tap="_editScoreDialog"></paper-icon-button>
-                  <paper-icon-button icon="icons:delete" on-tap="_deleteAjax"></paper-icon-button>
+                  <paper-icon-button icon="icons:create" on-tap="_editScoreDialog" class="mini"></paper-icon-button>
+                  <paper-icon-button icon="icons:delete" on-tap="_deleteAjax" class="mini"></paper-icon-button>
                 </td>
               </tr>
           </template>
