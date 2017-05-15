@@ -5,6 +5,7 @@
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/av-icons.html">
 
 <link rel="import" href="../../bower_components/app-route/app-route.html">
 <link rel="import" href="../../bower_components/app-route/app-location.html">
@@ -16,6 +17,7 @@
 <link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/iron-media-query/iron-media-query.html">
 
 <link rel="import" href="games-page.html">
 <link rel="import" href="team-page.html">
@@ -31,10 +33,15 @@
       :host {
         display: block;
       }
+      iron-icon[data-page] {
+        padding-right: 0.5em;
+      }
     </style>
 
     <app-location route="{{route}}" use-hash-as-path></app-location>
     <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{tail}}"></app-route>
+    <iron-media-query query="(max-width: 600px)" query-matches="{{mobile}}"></iron-media-query>
+    <app-route route="{{route}}" pattern="/games/:id" active="{{gamesDetailsActive}}"></app-route>
 
     <iron-ajax
       auto
@@ -69,13 +76,30 @@
       <!--<paper-header-panel>-->
         <paper-toolbar>
           <div style="width: 100%;" class="layout horizontal">
-            <div class="vcenter">iPoly Hub Games</div>
+            <div class="vcenter">
+              <div>iPoly Hub Games</div>
+              <div>[[subtitle]]</div>
+            </div>
             <div class="flex"></div>
             
-            <paper-button on-tap="_handleGotoPage" data-page="leaderboard">Leaderboard</paper-button>
-            <paper-button on-tap="_handleGotoPage" data-page="schedule">Schedule</paper-button>
-            <!-- <paper-button on-tap="_handleGotoPage" data-page="teams">Teams</paper-button> -->
-            <paper-button on-tap="_handleGotoPage" data-page="games">Games</paper-button>
+            <div class="layout horizontal" hidden$="[[mobile]]">
+
+              <paper-button on-tap="_handleGotoPage" data-page="leaderboard">
+                <iron-icon icon="icons:assessment" data-page="leaderboard"></iron-icon> Leaderboard
+              </paper-button>
+              <paper-button on-tap="_handleGotoPage" data-page="schedule">
+                <iron-icon icon="icons:schedule" data-page="schedule"></iron-icon> Schedule
+              </paper-button>
+              <paper-button on-tap="_handleGotoPage" data-page="games">
+                <iron-icon icon="av:games" data-page="games"></iron-icon> Games
+              </paper-button>
+            </div>
+            <div class="layout horizontal" hidden$="[[!mobile]]">
+
+              <paper-icon-button icon="icons:assessment" on-tap="_handleGotoPage" data-page="leaderboard">Leaderboard</paper-icon-button>
+              <paper-icon-button icon="icons:schedule" on-tap="_handleGotoPage" data-page="schedule">Schedule</paper-icon-button>
+              <paper-icon-button icon="av:games" on-tap="_handleGotoPage" data-page="games">Games</paper-icon-button>
+            </div>
           </div>
           
         </paper-toolbar>
@@ -168,6 +192,16 @@
         ranks: {
           type: Object,
           computed: '_computeRanks(games, scores)'
+        },
+        mobile: {
+          type: Boolean
+        },
+        gamesDetailsActive: {
+          type: Boolean
+        },
+        subtitle: {
+          type: String,
+          computed: '_computeTitle(routeData.page, gamesDetailsActive)'
         }
       },
       observers: [
@@ -243,8 +277,9 @@
 
           } else if(e instanceof Event) {
             if(e.type == 'tap') {
-              if(e.target.getAttribute('data-page')) {
-                page = e.target.getAttribute('data-page');
+              var t = Polymer.dom(e).localTarget;
+              if(t && t.getAttribute('data-page')) {
+                page = t.getAttribute('data-page');
               }
             } else if(e.detail && e.detail.page) {
               page = e.detail.page;
@@ -316,6 +351,21 @@
         
         return ranks;
       },
+      _computeTitle: function(page, gamesDetailsActive) {
+        var p = page !== undefined ? page.toLowerCase() : "";
+        switch(p) {
+          case "leaderboard":
+            return "Leaderboard";
+          case "teams":
+            return "Team Stats";
+          case "games":
+            return gamesDetailsActive ? "Game Details" : "Games";
+          case "schedule":
+            return "Schedule";
+          default:
+            return "";
+        }
+      }
     });
   </script>
 </dom-module>
