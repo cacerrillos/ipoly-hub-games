@@ -36,6 +36,16 @@
       iron-icon[data-page] {
         padding-right: 0.5em;
       }
+      paper-toolbar {
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+      .container {
+        margin-top: 56px;
+      }
     </style>
 
     <app-location route="{{route}}" use-hash-as-path></app-location>
