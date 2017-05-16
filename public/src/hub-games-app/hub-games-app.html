@@ -18,6 +18,8 @@
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 
 <link rel="import" href="games-page.html">
 <link rel="import" href="team-page.html">
@@ -45,6 +47,15 @@
       }
       .container {
         margin-top: 56px;
+      }
+      .close-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+      #helpDialog {
+        max-width: 400px;
+        padding: 0;
       }
     </style>
 
@@ -110,6 +121,7 @@
               <paper-icon-button icon="icons:schedule" on-tap="_handleGotoPage" data-page="schedule">Schedule</paper-icon-button>
               <paper-icon-button icon="av:games" on-tap="_handleGotoPage" data-page="games">Games</paper-icon-button>
             </div>
+            <paper-icon-button class="vcenter" icon="icons:help" on-tap="_help"></paper-icon-button>
           </div>
           
         </paper-toolbar>
@@ -170,6 +182,27 @@
           saasdasd
         </paper-material> -->
       <!--</paper-header-panel>-->
+    <paper-dialog id="helpDialog">
+      <div><paper-icon-button class="close-btn" icon="icons:close" dialog-dismiss></paper-icon-button></div>
+      <div style="padding: 0;">
+        <h1 class="center" style="margin-bottom: 1em;">Help</h1>
+        <paper-dialog-scrollable st>
+          <h2>For Teams</h2>
+          <p>
+            Check out your overall standings on the leaderboard page. Using the <iron-icon icon="icons:info"></iron-icon> button will take you to the <b>Team Stats</b> page where you can find a summary of your team's scores, rankings, and schedule.
+          </p>
+          <h2>For Game Hosts</h2>
+          <p>You can change your game settings and submit scores on your <b>game details</b> page.<br>
+          First go to <b><iron-icon icon="av:games"></iron-icon> Games</b> then use the apropriate <b><iron-icon icon="icons:assessment"></iron-icon></b> button to go to the details page.</p>
+          <h3 class="center"><iron-icon icon="icons:settings"></iron-icon> Game Settings</h3>
+          <p><b>Absolute</b> scoring is for games where points are earned as whole numbers.</p>
+          <p><b>Timed</b> scoring is for games where ranking is determined based on time</p>
+          <p>In both cases you can select the direction of rank, either a <b>higher</b> or <b>lower</b> score/time is better, resulting in a higher ranking.</p>
+          <p>Use the <b><iron-icon icon="icons:add"></iron-icon> button</b> in the bottom right to submit a score.</p>
+          <p>You can also <b><iron-icon icon="icons:create"></iron-icon> edit</b> or <b><iron-icon icon="icons:delete"></iron-icon> delete</b> submitted scores using the appropriate buttons on the detail page.</p>
+        </paper-dialog-scrollable>
+      </div>
+    </paper-dialog>
     <paper-toast id="globalToast"></paper-toast>
   </template>
   <script>
@@ -263,6 +296,8 @@
         return "error";
       },
       ready: function(e) {
+        var scrollable = Polymer.dom(this.$.helpDialog).querySelector('paper-dialog-scrollable');
+        scrollable.dialogElement = this.$.helpDialog;
         if(this.routeData) {
           if(this.routeData.page == undefined || this.routeData.page == '') {
             window.location.href = '#/leaderboard';
@@ -384,6 +419,9 @@
           default:
             return "";
         }
+      },
+      _help: function(e) {
+        this.$.helpDialog.open();
       }
     });
   </script>
