@@ -130,7 +130,7 @@ Example:
                 <td>[[result.rank]]</td>
                 <td>[[_getAttrFromObj(result.p_id, 'name', participants)]]</td>
                 <td>[[_parseScore(result.score_type, result.value)]]</td>
-                <td hidden$="[[!isAdmin]]">
+                <td hidden$="[[!isAdmin]]" class="layout horizontal">
                   <paper-icon-button icon="icons:create" on-tap="_editScoreDialog" class="mini"></paper-icon-button>
                   <paper-icon-button icon="icons:delete" on-tap="_deleteAjax" class="mini"></paper-icon-button>
                 </td>
@@ -140,7 +140,7 @@ Example:
         </div>
       </paper-material>
 
-      <paper-fab class="edit-fab" icon="icons:create" on-tap="_editDialog" disabled="[[loading]]"></paper-fab>
+      <paper-fab class="edit-fab" icon="icons:settings" on-tap="_editDialog" disabled="[[loading]]"></paper-fab>
       <paper-fab class="submit-fab" icon="icons:add" on-tap="_submitDialog" disabled="[[loading]]"></paper-fab>
     </template>
     <iron-ajax
