@@ -15,12 +15,20 @@
     "schedule.json",
     "manifest.json"
   ],
-  "includeDependencies": [
-    "bower_components/webcomponentsjs/webcomponents-lite.min.js",
-    "games.json",
-    "participants.json",
-    "schedule.json",
-    "manifest.json"
+  "builds": [
+    {
+      "name": "bundled",
+      "bundle": true,
+      "addServiceWorker": true,
+      "js": {"minify": true},
+      "css": {"minify": true},
+      "html": {"minify": true}
+    },{
+      "name": "unbundled",
+      "js": {"minify": true},
+      "css": {"minify": true},
+      "html": {"minify": true}
+    }
   ],
   "lint": {
     "rules": ["polymer-1"]
