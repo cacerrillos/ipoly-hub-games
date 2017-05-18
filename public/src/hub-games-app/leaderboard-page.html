@@ -67,7 +67,7 @@ Example:
         },
         leaderboard: {
           type: Array,
-          computed: '_computeLeaderboard(totals)'
+          computed: '_computeLeaderboard(totals, participants)'
         },
         participants: {
           type: Object
@@ -106,38 +106,38 @@ Example:
         }
         return "error";
       },
-      _computeLeaderboard: function(p) {
-        var p_a = this._objToArr(p);
-        // p_a[6].total = 50;
-        // p_a[7].total = 44;
-        // p_a[8].total = 44;
-
-        
-        p_a.sort(function(a, b) {
-          if(a.total == b.total)
-            return 0;
-          return a.total > b.total ? -1 : 1;
-        });
-
+      _computeLeaderboard: function(p, participants) {
         var arr = [];
-        var rank = 0;
-        if(p) {
-          for(var k in p_a) {
-            if(!p_a.hasOwnProperty(k)) continue;
+        for(var k in p) {
+          if(!p.hasOwnProperty(k)) continue;
 
-            if(arr.length == 0 || arr[arr.length - 1].score != p_a[k].total)
-              rank++;
+          arr.push({
+            'rank': 0,
+            'team': this._getAttrFromObj(p[k].id, 'name', participants),
+            'id': p[k].id,
+            'score': p[k].total,
+            'scoreString': p[k].total.toFixed(2)
+          });
+        }
 
-            arr.push({
-              'rank': rank,
-              'team': this._getAttrFromObj(p_a[k].id, 'name', this.participants),
-              'id': p_a[k].id,
-              'score': p_a[k].total,
-              'scoreString': p_a[k].total.toFixed(2)
-            });
-
+        arr.sort(function(a, b) {
+          if(a.score == b.score)
+            return 0;
+          return a.score > b.score ? -1 : 1;
+        });
+        
+        for(var x = 0; x < arr.length; x++) {
+          if(x == 0) {
+            arr[x].rank = 1;
+          } else {
+            if(arr[x].score == arr[x - 1].score) {
+              arr[x].rank = arr[x - 1].rank;
+            } else {
+              arr[x].rank = x + 1;
+            }
           }
         }
+
         return arr;
       },
       _sortedScores: function(games, scores) {

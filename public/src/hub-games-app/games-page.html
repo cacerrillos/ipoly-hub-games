@@ -378,7 +378,12 @@ Example:
         }
 
         for(var x = 1; x < s.length; x++) {
-          s[x].rank = s[x - 1].rank + (s[x - 1].value != s[x].value ? 1 : 0);
+          if(s[x].value != s[x - 1].value) {
+            s[x].rank = x + 1;
+          } else {
+            s[x].rank = s[x - 1].rank;
+          }
+
           s[x].score_type = games[id].score_type;
         }
         return s;
