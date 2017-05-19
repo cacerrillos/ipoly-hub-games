@@ -42,6 +42,7 @@ Example:
             <th>Rank</th>
             <th>Team</th>
             <th>Score</th>
+            <th># Played</th>
           </tr>
           <template is="dom-repeat" items="[[leaderboard]]" as="team">
             <tr class="hover">
@@ -49,6 +50,7 @@ Example:
               <td>[[team.rank]]</td>
               <td>[[team.team]]</td>
               <td>[[team.scoreString]]</td>
+              <td>[[team.count]]/10</td>
             </tr>
             
           </template>
@@ -116,7 +118,8 @@ Example:
             'team': this._getAttrFromObj(p[k].id, 'name', participants),
             'id': p[k].id,
             'score': p[k].total,
-            'scoreString': p[k].total.toFixed(2)
+            'scoreString': p[k].total.toFixed(2),
+            'count': p[k].count
           });
         }
 
@@ -181,6 +184,7 @@ Example:
         for(var k in p) {
           if(!p.hasOwnProperty(k)) continue;
           var total = 0;
+          var count = 0;
 
           for(var kk in s) {
             if(!s.hasOwnProperty(kk)) continue;
@@ -196,13 +200,15 @@ Example:
               if(s[kk][x].p_id == p[k].id) {
                 var rank_s = s[kk][x].rank - 1;
                 total += (t_p - rank_s) / t_p * 10.0;
+                count++;
               }
             }
           }
 
           a[p[k].id] = {
             'id': p[k].id,
-            'total': total
+            'total': total,
+            'count': count
           };
         }
 

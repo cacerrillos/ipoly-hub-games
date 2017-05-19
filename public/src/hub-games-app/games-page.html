@@ -40,7 +40,7 @@ Example:
         display: block;
       }
       paper-material {
-        max-width: 440px;
+        max-width: 460px;
       }
       .details {
         max-width: 350px;
@@ -94,6 +94,7 @@ Example:
             <th><b>Game</b></th>
             <th><b>Host</b></th>
             <th><b>Location</b></th>
+            <th><b># Scored</b></th>
           </tr>
           <template is="dom-repeat" items="[[gamesArray]]" as="game">
             <tr class="hover">
@@ -104,6 +105,7 @@ Example:
               <td>[[game.title]]</td>
               <td>[[game.host]]</td>
               <td>[[game.location]]</td>
+              <td>[[_count(game.id, scores)]]/10</td>
             </tr>
             
           </template>
@@ -311,11 +313,20 @@ Example:
         },
         location: {
           type: String
+        },
+        scores: {
+          type: Object
         }
       },
       observers: [
         '_scoreType(games, routeData.id)'
       ],
+      _count: function(g_id, scores) {
+        if(g_id !== undefined && scores && scores[g_id]) {
+          return scores[g_id].length;
+        }
+        return 0;
+      },
       _loading: function(a) {
         return !a;
       },
